@@ -712,6 +712,32 @@ html.grayscale-mode {
   stroke: hsl(var(--foreground));
 }
 
+/* —— 主题切换的 View Transition 基础规则 ——
+   逐条对齐官方 internal/tailwind-config/src/theme.css。
+   缺这四条时浏览器会额外跑一遍默认的「整页交叉淡入」，并且新旧快照层级与官方相反，
+   表现为：暗色切换时先整屏灰闪一下、扩散圆方向/清晰度都不对。 */
+::view-transition-new(root),
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2147483646;
+}
+
+html.dark::view-transition-old(root) {
+  z-index: 2147483646;
+}
+
+html.dark::view-transition-new(root) {
+  z-index: 1;
+}
+
 /* 标签栏 chrome 风格 */
 .tabs-chrome__item:not(.dragging):hover:not(.is-active)
   + .tabs-chrome__item
