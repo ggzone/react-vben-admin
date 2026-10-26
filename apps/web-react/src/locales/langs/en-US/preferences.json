@@ -191,10 +191,10 @@
   },
   "widget": {
     "title": "Widget",
-    "globalSearch": "Global Search",
+    "globalSearch": "Enable Global Search",
     "fullscreen": "Enable Fullscreen",
     "themeToggle": "Enable Theme Toggle",
-    "languageToggle": "Language Toggle",
+    "languageToggle": "Enable Language Toggle",
     "notification": "Enable Notification",
     "sidebarToggle": "Enable Sidebar Toggle",
     "lockScreen": "Enable Lock Screen",

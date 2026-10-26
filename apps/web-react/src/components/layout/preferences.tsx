@@ -41,14 +41,10 @@ import {
   PreferenceGeneralBlock,
   PreferenceGlobalShortcutKeysBlock,
   PreferenceHeaderBlock,
-  PreferenceInputItem,
   PreferenceLayoutBlock,
   PreferenceNavigationBlock,
-  PreferenceNumberFieldItem,
   PreferenceRadiusBlock,
-  PreferenceSelectItem,
   PreferenceSidebarBlock,
-  PreferenceSwitchItem,
   PreferenceTabbarBlock,
   PreferenceThemeBlock,
   PreferenceWidgetBlock,
@@ -100,12 +96,6 @@ export function PreferencesDrawer({
   );
   const updatePreferences = usePreferencesStore(
     (state) => state.updatePreferences,
-  );
-  const customPreferences = usePreferencesStore(
-    (state) => state.customPreferences,
-  );
-  const updateCustomPreferences = usePreferencesStore(
-    (state) => state.updateCustomPreferences,
   );
   const resetPreferences = usePreferencesStore(
     (state) => state.resetPreferences,
@@ -240,8 +230,8 @@ export function PreferencesDrawer({
                   value: 'shortcutKey',
                 },
                 { label: $t('preferences.general'), value: 'general' },
-                // 对齐官方 web-antd 注册的 preferencesExtension（tabLabel=preferences.antd.tabLabel）
-                { label: $t('preferences.antd.tabLabel'), value: 'custom' },
+                // React 版不基于 antd，官方 web-antd 用 preferencesExtension 注册的
+                // 「Antd 拓展」页签在这里没有对应内容，故不渲染（官方核心 4 页签为准）
               ]}
               value={activeTab}
               onValueChange={setActiveTab}
@@ -331,67 +321,6 @@ export function PreferencesDrawer({
               </PreferenceBlock>
               <PreferenceBlock title={$t('preferences.animation.title')}>
                 <PreferenceAnimationBlock />
-              </PreferenceBlock>
-            </TabsContent>
-
-            {/* Antd 拓展（对齐官方 apps/web-antd/src/preferences.ts 的 preferencesExtension） */}
-            <TabsContent value="custom">
-              <PreferenceBlock title={$t('preferences.antd.title')}>
-                <PreferenceSwitchItem
-                  checked={Boolean(customPreferences.enableFormFullscreen)}
-                  tip={$t('preferences.antd.fields.enableFormFullscreen.tip')}
-                  onChange={(val) =>
-                    updateCustomPreferences({ enableFormFullscreen: val })
-                  }
-                >
-                  {$t('preferences.antd.fields.enableFormFullscreen.label')}
-                </PreferenceSwitchItem>
-                <PreferenceSelectItem
-                  items={[
-                    {
-                      label: $t(
-                        'preferences.antd.fields.tenantMode.options.single.label',
-                      ),
-                      value: 'single',
-                    },
-                    {
-                      label: $t(
-                        'preferences.antd.fields.tenantMode.options.multi.label',
-                      ),
-                      value: 'multi',
-                    },
-                  ]}
-                  value={String(customPreferences.tenantMode ?? 'single')}
-                  onChange={(val) =>
-                    updateCustomPreferences({
-                      tenantMode: val as 'multi' | 'single',
-                    })
-                  }
-                >
-                  {$t('preferences.antd.fields.tenantMode.label')}
-                </PreferenceSelectItem>
-                <PreferenceNumberFieldItem
-                  max={200}
-                  min={10}
-                  step={10}
-                  value={Number(customPreferences.defaultTableSize ?? 20)}
-                  onChange={(val) =>
-                    updateCustomPreferences({ defaultTableSize: val })
-                  }
-                >
-                  {$t('preferences.antd.fields.defaultTableSize.label')}
-                </PreferenceNumberFieldItem>
-                <PreferenceInputItem
-                  placeholder={$t(
-                    'preferences.antd.fields.reportTitle.placeholder',
-                  )}
-                  value={String(customPreferences.reportTitle ?? '')}
-                  onChange={(val) =>
-                    updateCustomPreferences({ reportTitle: val })
-                  }
-                >
-                  {$t('preferences.antd.fields.reportTitle.label')}
-                </PreferenceInputItem>
               </PreferenceBlock>
             </TabsContent>
           </Tabs>

@@ -6,6 +6,8 @@
  */
 import { useMemo, useState } from 'react';
 import {
+  Circle,
+  CircleCheckBig,
   CircleHelp,
   CircleX,
   Minus,
@@ -23,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
+import { Button } from '#/components/ui/button';
 import { Switch } from '#/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group';
 import {
@@ -291,6 +294,58 @@ export function PreferenceInputItem({
   );
 }
 
+/**
+ * 数字输入控件 —— 对齐官方 @vben-core/shadcn-ui 的 NumberField 组合
+ * （NumberFieldInput 是唯一带边框的输入框，h-9 w-full，减/加号绝对定位贴在左右内边距里）
+ */
+export function PreferenceNumberFieldControl({
+  className,
+  disabled = false,
+  max = 999,
+  min = 0,
+  step = 1,
+  value,
+  onChange,
+}: {
+  className?: string;
+  disabled?: boolean;
+  max?: number;
+  min?: number;
+  step?: number;
+  value: number;
+  onChange: (val: number) => void;
+}) {
+  return (
+    <div className={cn('relative', className)}>
+      <Input
+        className="h-9 w-full rounded-md border-input bg-transparent py-1 pr-5 pl-5 text-center text-sm shadow-xs"
+        disabled={disabled}
+        value={value}
+        onChange={(e) => {
+          const num = Number(e.target.value);
+          if (!Number.isNaN(num)) onChange(num);
+        }}
+      />
+      <button
+        className="absolute top-1/2 left-0 -translate-y-1/2 p-3 text-foreground disabled:cursor-not-allowed disabled:opacity-20"
+        disabled={disabled || value <= min}
+        type="button"
+        onClick={() => onChange(Math.max(min, value - step))}
+      >
+        <Minus className="size-4" />
+      </button>
+      <button
+        className="absolute top-1/2 right-0 -translate-y-1/2 p-3 text-foreground disabled:cursor-not-allowed disabled:opacity-20"
+        disabled={disabled || value >= max}
+        type="button"
+        onClick={() => onChange(Math.min(max, value + step))}
+      >
+        <Plus className="size-4" />
+      </button>
+    </div>
+  );
+}
+
 /** 数字输入项 */
 export function PreferenceNumberFieldItem({
   disabled = false,
@@ -334,31 +389,16 @@ export function PreferenceNumberFieldItem({
           </Tooltip>
         )}
       </span>
-      <div className="flex h-8 items-center rounded-md border border-input">
-        <button
-          className="flex h-full w-7 items-center justify-center rounded-l-md text-muted-foreground hover:bg-accent disabled:opacity-50"
-          disabled={disabled || value <= min}
-          onClick={() => onChange(Math.max(min, value - step))}
-        >
-          <Minus className="size-3.5" />
-        </button>
-        <Input
-          className="h-8 w-12 rounded-none border-x border-input text-center shadow-none"
-          disabled={disabled}
-          value={value}
-          onChange={(e) => {
-            const num = Number(e.target.value);
-            if (!Number.isNaN(num)) onChange(num);
-          }}
-        />
-        <button
-          className="flex h-full w-7 items-center justify-center rounded-r-md text-muted-foreground hover:bg-accent disabled:opacity-50"
-          disabled={disabled || value >= max}
-          onClick={() => onChange(Math.min(max, value + step))}
-        >
-          <Plus className="size-3.5" />
-        </button>
-      </div>
+      {/* 官方 number-field-item.vue：<NumberField class="w-41.25"> */}
+      <PreferenceNumberFieldControl
+        className="w-41.25"
+        disabled={disabled}
+        max={max}
+        min={min}
+        step={step}
+        value={value}
+        onChange={onChange}
+      />
     </div>
   );
 }
@@ -367,12 +407,14 @@ export function PreferenceNumberFieldItem({
 export function PreferenceCheckboxItem({
   disabled = false,
   items = [],
+  tip,
   value,
   onChange,
   children,
 }: {
   disabled?: boolean;
   items?: Array<{ label: string; value: string }>;
+  tip?: string;
   value: string[];
   onChange: (val: string[]) => void;
   children: React.ReactNode;
@@ -381,24 +423,54 @@ export function PreferenceCheckboxItem({
     <div
       className={cn(
         'my-1 flex w-full items-center justify-between rounded-md px-2 py-1',
-        'hover:bg-accent',
+        !tip && 'hover:bg-accent',
         disabled && 'pointer-events-none opacity-50',
       )}
     >
-      <span className="flex items-center text-sm">{children}</span>
-      <div className="flex h-8 w-41.25 items-center gap-1 rounded-md border border-input px-2">
-        {items.map((item) => {
+      <span className="flex items-center text-sm">
+        {children}
+        {tip && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <CircleHelp className="ml-1 size-3 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {tip.split('\n').map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </span>
+      {/* 对齐官方 VbenCheckButtonGroup（size=middle / gap=0 / showIcon）：
+          选中 = variant default + CircleCheckBig，未选中 = variant outline + Circle；
+          官方 no-gap 规则：button + button 保留 border-left、首个 button 去掉 border-right，
+          相邻按钮共用一条 1px 边框，只有两端保留圆角。 */}
+      <div className="inline-flex h-8 w-41.25 rounded-md">
+        {items.map((item, index) => {
           const active = value.includes(item.value);
+          const first = index === 0;
+          const last = index === items.length - 1;
           return (
-            <button
-              key={item.value}
+            <Button
               className={cn(
-                'flex-1 rounded-sm py-1 text-xs transition-colors',
-                active
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-accent',
+                'border px-2 py-1 text-xs leading-4',
+                !last && 'border-r-0',
+                active && 'border-primary',
+                first &&
+                  !last &&
+                  'rounded-l-[calc(var(--radius)-2px)] rounded-r-none',
+                last &&
+                  !first &&
+                  'rounded-r-[calc(var(--radius)-2px)] rounded-l-none',
+                !first && !last && 'rounded-none',
+                first && last && 'rounded-md',
               )}
               disabled={disabled}
+              key={item.value}
+              size="sm"
+              type="button"
+              variant={active ? 'default' : 'outline'}
               onClick={() =>
                 onChange(
                   active
@@ -407,8 +479,15 @@ export function PreferenceCheckboxItem({
                 )
               }
             >
+              <span className="mr-[0.2rem] inline-flex items-center">
+                {active ? (
+                  <CircleCheckBig className="size-3" />
+                ) : (
+                  <Circle className="size-3" />
+                )}
+              </span>
               {item.label}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -630,18 +709,18 @@ export function PreferenceFontSizeBlock() {
     (state) => state.updatePreferences,
   );
   return (
+    // 对齐官方 font-size.vue：无标签行，只有 NumberField(w-full) + "px" + 提示文案
     <div className="flex w-full flex-col gap-4">
       <div className="flex items-center gap-2">
-        <PreferenceNumberFieldItem
+        <PreferenceNumberFieldControl
+          className="w-full"
           max={22}
           min={15}
           step={1}
           value={preferences.theme.fontSize}
           onChange={(val) => updatePreferences({ theme: { fontSize: val } })}
-        >
-          {$t('preferences.theme.fontSize')}
-        </PreferenceNumberFieldItem>
-        <span className="text-xs whitespace-nowrap text-muted-foreground">
+        />
+        <span className="whitespace-nowrap text-xs text-muted-foreground">
           px
         </span>
       </div>
@@ -812,12 +891,10 @@ export function PreferenceSidebarBlock({ disabled }: { disabled: boolean }) {
     (state) => state.updatePreferences,
   );
   const s = preferences.sidebar;
-  const [buttons, setButtons] = useState<string[]>(() => {
-    const list: string[] = [];
-    if (s.collapsedButton) list.push('collapsed');
-    if (s.fixedButton) list.push('fixed');
-    return list;
-  });
+  // 对齐官方 sidebar.vue：`sidebarButtons` 是纯本地 UI 态，初值 `[]`（官方实测首次展开
+  // 两项均为未选中态，onMounted 的同步在官方链路上并未生效）。点击后仍写回偏好，
+  // 让「折叠按钮 / 固定按钮」确实作用于侧边栏。
+  const [buttons, setButtons] = useState<string[]>([]);
 
   function handleCheckboxChange(next: string[]) {
     setButtons(next);
@@ -1487,6 +1564,8 @@ export function PreferenceGlobalShortcutKeysBlock() {
   );
   const k = preferences.shortcutKeys;
   const altView = isWindowsOs() ? 'Alt' : '⌥';
+  // 快捷键文案对齐官方 global.vue：搜索是 `Ctrl + <kbd>K</kbd>`，
+  // 退出登录/锁屏是纯文本 `Alt Q` / `Alt L`（官方 slot 里没有 kbd，多余的内框会多出一个方块）
   return (
     <>
       <PreferenceSwitchItem
@@ -1512,11 +1591,7 @@ export function PreferenceGlobalShortcutKeysBlock() {
       <PreferenceSwitchItem
         checked={k.globalLogout}
         disabled={!k.enable}
-        shortcut={
-          <>
-            {altView} <kbd> Q </kbd>
-          </>
-        }
+        shortcut={`${altView} Q`}
         onChange={(val) =>
           updatePreferences({ shortcutKeys: { globalLogout: val } })
         }
@@ -1526,11 +1601,7 @@ export function PreferenceGlobalShortcutKeysBlock() {
       <PreferenceSwitchItem
         checked={k.globalLockScreen}
         disabled={!k.enable}
-        shortcut={
-          <>
-            {altView} <kbd> L </kbd>
-          </>
-        }
+        shortcut={`${altView} L`}
         onChange={(val) =>
           updatePreferences({ shortcutKeys: { globalLockScreen: val } })
         }
