@@ -1,0 +1,1054 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+/* 官方基础设计 token（--background / --card / --sidebar / --header 等 HSL 变量）
+   来源：packages/@core/base/design/src/design-tokens/{default,dark}.css */
+@import './design-tokens/default.css';
+@import './design-tokens/dark.css';
+
+@plugin '@tailwindcss/typography';
+
+/* Monorepo source detection: scan app source for utility classes */
+@source '../../../apps/web-react/';
+
+/* Dark mode uses .dark class selector, not prefers-color-scheme */
+@custom-variant dark (&:is(.dark *));
+
+/* Explicitly pin Tailwind v4 dynamic spacing for classes like w-150/h-55. */
+@theme {
+  --spacing: 0.25rem;
+}
+
+@theme inline {
+  /* Font */
+  --font-sans: var(--font-family);
+
+  /* Border Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Box Shadow */
+  --shadow-float:
+    0 6px 16px 0 rgb(0 0 0 / 8%), 0 3px 6px -4px rgb(0 0 0 / 12%),
+    0 9px 28px 8px rgb(0 0 0 / 5%);
+
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-collapsible-down: collapsible-down 0.2s ease-in-out;
+  --animate-collapsible-up: collapsible-up 0.2s ease-in-out;
+  --animate-float: float 5s linear 0ms infinite;
+
+  /* ===== Semantic Colors (shadcn-ui) ===== */
+
+  --color-background: hsl(var(--background));
+  --color-background-deep: hsl(var(--background-deep));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-hover: hsl(var(--accent-hover));
+  --color-accent-lighter: hsl(var(--accent-lighter));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-input-background: hsl(var(--input-background));
+  --color-ring: hsl(var(--ring));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-desc: hsl(var(--secondary-desc));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  /* ===== Custom Semantic Colors ===== */
+
+  --color-header: hsl(var(--header));
+  --color-heavy: hsl(var(--heavy));
+  --color-heavy-foreground: hsl(var(--heavy-foreground));
+  --color-main: hsl(var(--main));
+  --color-overlay: hsl(var(--overlay));
+  --color-overlay-content: hsl(var(--overlay-content));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-deep: hsl(var(--sidebar-deep));
+
+  /* ===== Primary Palette ===== */
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-50: hsl(var(--primary-50));
+  --color-primary-100: hsl(var(--primary-100));
+  --color-primary-200: hsl(var(--primary-200));
+  --color-primary-300: hsl(var(--primary-300));
+  --color-primary-400: hsl(var(--primary-400));
+  --color-primary-500: hsl(var(--primary-500));
+  --color-primary-600: hsl(var(--primary-600));
+  --color-primary-700: hsl(var(--primary-700));
+  --color-primary-active: hsl(var(--primary-700));
+  --color-primary-background-light: hsl(var(--primary-200));
+  --color-primary-background-lighter: hsl(var(--primary-100));
+  --color-primary-background-lightest: hsl(var(--primary-50));
+  --color-primary-border: hsl(var(--primary-400));
+  --color-primary-border-light: hsl(var(--primary-300));
+  --color-primary-hover: hsl(var(--primary-600));
+  --color-primary-text: hsl(var(--primary-500));
+  --color-primary-text-active: hsl(var(--primary-700));
+  --color-primary-text-hover: hsl(var(--primary-600));
+
+  /* ===== Destructive Palette ===== */
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-50: hsl(var(--destructive-50));
+  --color-destructive-100: hsl(var(--destructive-100));
+  --color-destructive-200: hsl(var(--destructive-200));
+  --color-destructive-300: hsl(var(--destructive-300));
+  --color-destructive-400: hsl(var(--destructive-400));
+  --color-destructive-500: hsl(var(--destructive-500));
+  --color-destructive-600: hsl(var(--destructive-600));
+  --color-destructive-700: hsl(var(--destructive-700));
+  --color-destructive-active: hsl(var(--destructive-700));
+  --color-destructive-background-light: hsl(var(--destructive-200));
+  --color-destructive-background-lighter: hsl(var(--destructive-100));
+  --color-destructive-background-lightest: hsl(var(--destructive-50));
+  --color-destructive-border: hsl(var(--destructive-400));
+  --color-destructive-border-light: hsl(var(--destructive-300));
+  --color-destructive-hover: hsl(var(--destructive-600));
+  --color-destructive-text: hsl(var(--destructive-500));
+  --color-destructive-text-active: hsl(var(--destructive-700));
+  --color-destructive-text-hover: hsl(var(--destructive-600));
+
+  /* ===== Success Palette ===== */
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-success-50: hsl(var(--success-50));
+  --color-success-100: hsl(var(--success-100));
+  --color-success-200: hsl(var(--success-200));
+  --color-success-300: hsl(var(--success-300));
+  --color-success-400: hsl(var(--success-400));
+  --color-success-500: hsl(var(--success-500));
+  --color-success-600: hsl(var(--success-600));
+  --color-success-700: hsl(var(--success-700));
+  --color-success-active: hsl(var(--success-700));
+  --color-success-background-light: hsl(var(--success-200));
+  --color-success-background-lighter: hsl(var(--success-100));
+  --color-success-background-lightest: hsl(var(--success-50));
+  --color-success-border: hsl(var(--success-400));
+  --color-success-border-light: hsl(var(--success-300));
+  --color-success-hover: hsl(var(--success-600));
+  --color-success-text: hsl(var(--success-500));
+  --color-success-text-active: hsl(var(--success-700));
+  --color-success-text-hover: hsl(var(--success-600));
+
+  /* ===== Warning Palette ===== */
+
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-warning-50: hsl(var(--warning-50));
+  --color-warning-100: hsl(var(--warning-100));
+  --color-warning-200: hsl(var(--warning-200));
+  --color-warning-300: hsl(var(--warning-300));
+  --color-warning-400: hsl(var(--warning-400));
+  --color-warning-500: hsl(var(--warning-500));
+  --color-warning-600: hsl(var(--warning-600));
+  --color-warning-700: hsl(var(--warning-700));
+  --color-warning-active: hsl(var(--warning-700));
+  --color-warning-background-light: hsl(var(--warning-200));
+  --color-warning-background-lighter: hsl(var(--warning-100));
+  --color-warning-background-lightest: hsl(var(--warning-50));
+  --color-warning-border: hsl(var(--warning-400));
+  --color-warning-border-light: hsl(var(--warning-300));
+  --color-warning-hover: hsl(var(--warning-600));
+  --color-warning-text: hsl(var(--warning-500));
+  --color-warning-text-active: hsl(var(--warning-700));
+  --color-warning-text-hover: hsl(var(--warning-600));
+
+  /* ===== Green Palette (alias for success shades) ===== */
+
+  --color-green-50: hsl(var(--green-50));
+  --color-green-100: hsl(var(--green-100));
+  --color-green-200: hsl(var(--green-200));
+  --color-green-300: hsl(var(--green-300));
+  --color-green-400: hsl(var(--green-400));
+  --color-green-500: hsl(var(--green-500));
+  --color-green-600: hsl(var(--green-600));
+  --color-green-700: hsl(var(--green-700));
+  --color-green-active: hsl(var(--green-700));
+  --color-green-background-light: hsl(var(--green-200));
+  --color-green-background-lighter: hsl(var(--green-100));
+  --color-green-background-lightest: hsl(var(--green-50));
+  --color-green-border: hsl(var(--green-400));
+  --color-green-border-light: hsl(var(--green-300));
+  --color-green-foreground: hsl(var(--success-foreground));
+  --color-green-hover: hsl(var(--green-600));
+  --color-green-text: hsl(var(--green-500));
+  --color-green-text-active: hsl(var(--green-700));
+  --color-green-text-hover: hsl(var(--green-600));
+
+  /* ===== Red Palette (alias for destructive shades) ===== */
+
+  --color-red-50: hsl(var(--red-50));
+  --color-red-100: hsl(var(--red-100));
+  --color-red-200: hsl(var(--red-200));
+  --color-red-300: hsl(var(--red-300));
+  --color-red-400: hsl(var(--red-400));
+  --color-red-500: hsl(var(--red-500));
+  --color-red-600: hsl(var(--red-600));
+  --color-red-700: hsl(var(--red-700));
+  --color-red-active: hsl(var(--red-700));
+  --color-red-background-light: hsl(var(--red-200));
+  --color-red-background-lighter: hsl(var(--red-100));
+  --color-red-background-lightest: hsl(var(--red-50));
+  --color-red-border: hsl(var(--red-400));
+  --color-red-border-light: hsl(var(--red-300));
+  --color-red-foreground: hsl(var(--destructive-foreground));
+  --color-red-hover: hsl(var(--red-600));
+  --color-red-text: hsl(var(--red-500));
+  --color-red-text-active: hsl(var(--red-700));
+  --color-red-text-hover: hsl(var(--red-600));
+
+  /* ===== Yellow Palette (alias for warning shades) ===== */
+
+  --color-yellow-50: hsl(var(--yellow-50));
+  --color-yellow-100: hsl(var(--yellow-100));
+  --color-yellow-200: hsl(var(--yellow-200));
+  --color-yellow-300: hsl(var(--yellow-300));
+  --color-yellow-400: hsl(var(--yellow-400));
+  --color-yellow-500: hsl(var(--yellow-500));
+  --color-yellow-600: hsl(var(--yellow-600));
+  --color-yellow-700: hsl(var(--yellow-700));
+  --color-yellow-active: hsl(var(--yellow-700));
+  --color-yellow-background-light: hsl(var(--yellow-200));
+  --color-yellow-background-lighter: hsl(var(--yellow-100));
+  --color-yellow-background-lightest: hsl(var(--yellow-50));
+  --color-yellow-border: hsl(var(--yellow-400));
+  --color-yellow-border-light: hsl(var(--yellow-300));
+  --color-yellow-foreground: hsl(var(--warning-foreground));
+  --color-yellow-hover: hsl(var(--yellow-600));
+  --color-yellow-text: hsl(var(--yellow-500));
+  --color-yellow-text-active: hsl(var(--yellow-700));
+  --color-yellow-text-hover: hsl(var(--yellow-600));
+}
+
+/* Keyframes */
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+
+  to {
+    height: 0;
+  }
+}
+
+@keyframes collapsible-down {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: var(--radix-collapsible-content-height);
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+  }
+
+  to {
+    height: 0;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Base styles */
+@layer base {
+  *,
+  ::after,
+  ::before {
+    @apply border-border outline-ring/50;
+
+    box-sizing: border-box;
+    border-style: solid;
+    border-width: 0;
+  }
+
+  html {
+    @apply text-foreground bg-background font-sans;
+
+    scroll-behavior: smooth;
+    font-size: var(--font-size-base, 16px);
+    font-variation-settings: normal;
+    font-synthesis-weight: none;
+    line-height: 1.15;
+    text-rendering: optimizelegibility;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #app,
+  body,
+  html {
+    @apply size-full;
+  }
+
+  /* 对齐官方各 UI 库版本注入的基础排版：
+     web-antd 的 Ant Design `.ant-app` 为 14px / 1.5715（=22px），
+     element-plus、naive 版本基础字号同为 14px。
+     vben-core 本身只在 html 上设 1.15，未定义正文字号，
+     不加这段会让所有未显式设字号的文本比官方大一号、行高由 22px 变 18.4px。 */
+  #app {
+    font-size: 14px;
+    line-height: 1.5715;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  a,
+  a:active,
+  a:hover,
+  a:link,
+  a:visited {
+    @apply no-underline;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply opacity-100;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    @apply m-0 appearance-none;
+  }
+
+  /* Only adjust scrollbar for non-macOS */
+  html:not([data-platform='macOs']) {
+    ::-webkit-scrollbar {
+      @apply h-2.5 w-2.5;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      @apply bg-border rounded-sm border-none;
+    }
+
+    ::-webkit-scrollbar-track {
+      @apply rounded-sm border-none bg-transparent shadow-none;
+    }
+
+    ::-webkit-scrollbar-button {
+      @apply hidden;
+    }
+  }
+
+  /* Tailwind v4 Preflight 不再为 button 默认设置 pointer */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+/* Custom utilities (v4 @utility syntax) */
+@utility flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@utility flex-col-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@layer components {
+  .outline-box {
+    @apply outline-border relative cursor-pointer rounded-md p-1 outline-1;
+  }
+
+  .outline-box::after {
+    @apply absolute top-1/2 left-1/2 z-20 h-0 w-px rounded-sm opacity-0 outline-2 outline-transparent transition-all duration-300 content-[""];
+  }
+
+  .outline-box.outline-box-active {
+    @apply outline-primary outline-2;
+  }
+
+  .outline-box.outline-box-active::after {
+    display: none;
+  }
+
+  .outline-box:not(.outline-box-active):hover::after {
+    @apply outline-primary top-0 left-0 h-full w-full p-1 opacity-100;
+  }
+
+  .vben-link {
+    @apply text-primary hover:text-primary-hover active:text-primary-active cursor-pointer;
+  }
+
+  .card-box {
+    @apply bg-card text-card-foreground border-border rounded-xl border;
+  }
+}
+
+/* Enter animations */
+@keyframes enter-x-animation {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes enter-y-animation {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.enter-x:nth-child(1) {
+  opacity: 0;
+  transform: translateX(50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.1s forwards;
+}
+
+.enter-x:nth-child(2) {
+  opacity: 0;
+  transform: translateX(50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.2s forwards;
+}
+
+.enter-x:nth-child(3) {
+  opacity: 0;
+  transform: translateX(50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.3s forwards;
+}
+
+.enter-x:nth-child(4) {
+  opacity: 0;
+  transform: translateX(50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.4s forwards;
+}
+
+.enter-x:nth-child(5) {
+  opacity: 0;
+  transform: translateX(50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.5s forwards;
+}
+
+.enter-y:nth-child(1) {
+  opacity: 0;
+  transform: translateY(50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.1s forwards;
+}
+
+.enter-y:nth-child(2) {
+  opacity: 0;
+  transform: translateY(50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.2s forwards;
+}
+
+.enter-y:nth-child(3) {
+  opacity: 0;
+  transform: translateY(50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.3s forwards;
+}
+
+.enter-y:nth-child(4) {
+  opacity: 0;
+  transform: translateY(50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.4s forwards;
+}
+
+.enter-y:nth-child(5) {
+  opacity: 0;
+  transform: translateY(50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.5s forwards;
+}
+
+.-enter-x:nth-child(1) {
+  opacity: 0;
+  transform: translateX(-50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.1s forwards;
+}
+
+.-enter-x:nth-child(2) {
+  opacity: 0;
+  transform: translateX(-50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.2s forwards;
+}
+
+.-enter-x:nth-child(3) {
+  opacity: 0;
+  transform: translateX(-50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.3s forwards;
+}
+
+.-enter-x:nth-child(4) {
+  opacity: 0;
+  transform: translateX(-50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.4s forwards;
+}
+
+.-enter-x:nth-child(5) {
+  opacity: 0;
+  transform: translateX(-50px);
+  animation: enter-x-animation 0.3s ease-in-out 0.5s forwards;
+}
+
+.-enter-y:nth-child(1) {
+  opacity: 0;
+  transform: translateY(-50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.1s forwards;
+}
+
+.-enter-y:nth-child(2) {
+  opacity: 0;
+  transform: translateY(-50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.2s forwards;
+}
+
+.-enter-y:nth-child(3) {
+  opacity: 0;
+  transform: translateY(-50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.3s forwards;
+}
+
+.-enter-y:nth-child(4) {
+  opacity: 0;
+  transform: translateY(-50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.4s forwards;
+}
+
+.-enter-y:nth-child(5) {
+  opacity: 0;
+  transform: translateY(-50px);
+  animation: enter-y-animation 0.3s ease-in-out 0.5s forwards;
+}
+
+html.invert-mode {
+  @apply invert;
+}
+
+html.grayscale-mode {
+  @apply grayscale;
+}
+
+/* 登录页背景 */
+.login-background {
+  background: linear-gradient(
+    154deg,
+    #07070915 30%,
+    hsl(var(--primary) / 30%) 48%,
+    #07070915 64%
+  );
+  filter: blur(100px);
+}
+
+.dark .login-background {
+  background: linear-gradient(
+    154deg,
+    #07070915 30%,
+    hsl(var(--primary) / 20%) 48%,
+    #07070915 64%
+  );
+  filter: blur(100px);
+}
+
+/* 侧边内容动画 */
+.side-content {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.side-content[data-side='top'] {
+  animation-name: slide-up;
+}
+
+.side-content[data-side='bottom'] {
+  animation-name: slide-down;
+}
+
+.side-content[data-side='left'] {
+  animation-name: slide-left;
+}
+
+.side-content[data-side='right'] {
+  animation-name: slide-right;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.breadcrumb-transition-enter-active {
+  transition:
+    transform 0.4s cubic-bezier(0.76, 0, 0.24, 1),
+    opacity 0.4s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.breadcrumb-transition-enter-from {
+  opacity: 0;
+  transform: translateX(30px) skewX(-30deg);
+}
+
+.z-popup {
+  z-index: var(--popup-z-index);
+}
+
+/* 主题切换按钮动画 */
+.theme-toggle__moon > circle {
+  transition: transform 0.5s cubic-bezier(0, 0, 0.3, 1);
+}
+
+.theme-toggle__sun {
+  stroke: none;
+  transform-origin: center center;
+  transition: transform 1.6s cubic-bezier(0.25, 0, 0.2, 1);
+}
+
+.theme-toggle__sun-beams {
+  transform-origin: center center;
+  transition:
+    transform 1.6s cubic-bezier(0.5, 1.5, 0.75, 1.25),
+    opacity 0.6s cubic-bezier(0.25, 0, 0.3, 1);
+}
+
+.theme-toggle.is-light .theme-toggle__sun {
+  @apply scale-50;
+}
+
+.theme-toggle.is-light .theme-toggle__sun-beams {
+  transform: rotateZ(0.25turn);
+}
+
+.theme-toggle.is-dark .theme-toggle__moon > circle {
+  transform: translateX(-20px);
+}
+
+.theme-toggle.is-dark .theme-toggle__sun-beams {
+  @apply opacity-0;
+}
+
+.theme-toggle:hover > svg .theme-toggle__sun {
+  fill: hsl(var(--foreground));
+}
+
+.theme-toggle:hover > svg .theme-toggle__sun-beams {
+  stroke: hsl(var(--foreground));
+}
+
+/* 标签栏 chrome 风格 */
+.tabs-chrome__item:not(.dragging):hover:not(.is-active)
+  + .tabs-chrome__item
+  .tabs-chrome__divider {
+  @apply opacity-0;
+}
+
+.tabs-chrome__item:not(.dragging):hover:not(.is-active) .tabs-chrome__divider {
+  @apply opacity-0;
+}
+
+.tabs-chrome__item:not(.dragging):hover:not(.is-active)
+  .tabs-chrome__background {
+  @apply pb-0.5;
+}
+
+.tabs-chrome__item:not(.dragging):hover:not(.is-active)
+  .tabs-chrome__background-content {
+  @apply bg-accent mx-0.5 rounded-md;
+}
+
+.tabs-chrome__item:not(.dragging).is-active {
+  @apply z-[2];
+}
+
+.tabs-chrome__item:not(.dragging).is-active
+  + .tabs-chrome__item
+  .tabs-chrome__divider {
+  @apply opacity-0!;
+}
+
+/* 菜单（port from @vben-core/menu-ui scss） */
+.vben-menu__popup-container,
+.vben-menu {
+  --menu-title-width: 140px;
+  --menu-item-icon-size: var(--font-size-base, 16px);
+  --menu-item-height: 38px;
+  --menu-item-padding-y: 21px;
+  --menu-item-padding-x: 12px;
+  --menu-item-popup-padding-y: 20px;
+  --menu-item-popup-padding-x: 12px;
+  --menu-item-margin-y: 2px;
+  --menu-item-margin-x: 0px;
+  --menu-item-collapse-padding-y: 23.5px;
+  --menu-item-collapse-padding-x: 0px;
+  --menu-item-collapse-margin-y: 4px;
+  --menu-item-collapse-margin-x: 0px;
+  --menu-item-radius: 0px;
+  --menu-item-indent: 16px;
+}
+
+.vben-menu.is-dark {
+  --menu-background-color: hsl(var(--menu));
+  --menu-item-color: hsl(var(--foreground) / 80%);
+  --menu-item-background-color: var(--menu-background-color);
+  --menu-item-hover-color: hsl(var(--accent-foreground));
+  --menu-item-hover-background-color: hsl(var(--accent));
+  --menu-item-active-color: hsl(var(--accent-foreground));
+  --menu-item-active-background-color: hsl(var(--accent));
+  --menu-submenu-background-color: var(--menu-background-color);
+  --menu-submenu-hover-color: hsl(var(--accent-foreground));
+  --menu-submenu-hover-background-color: hsl(var(--accent));
+  --menu-submenu-active-color: hsl(var(--accent-foreground));
+  --menu-submenu-active-background-color: transparent;
+}
+
+.vben-menu.is-light {
+  --menu-background-color: hsl(var(--menu));
+  --menu-item-color: hsl(var(--accent-foreground));
+  --menu-item-background-color: var(--menu-background-color);
+  --menu-item-hover-color: var(--menu-item-color);
+  --menu-item-hover-background-color: hsl(var(--accent));
+  --menu-item-active-color: hsl(var(--primary));
+  --menu-item-active-background-color: hsl(var(--primary) / 15%);
+  --menu-submenu-background-color: var(--menu-background-color);
+  --menu-submenu-hover-color: hsl(var(--primary));
+  --menu-submenu-hover-background-color: hsl(var(--accent));
+  --menu-submenu-active-color: hsl(var(--primary));
+  --menu-submenu-active-background-color: transparent;
+}
+
+.vben-menu.is-rounded {
+  --menu-item-margin-x: 8px;
+  --menu-item-collapse-margin-x: 6px;
+  --menu-item-radius: 8px;
+}
+
+.vben-menu {
+  position: relative;
+  box-sizing: border-box;
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
+  background: hsl(var(--menu-background-color));
+  --menu-level: 0;
+}
+
+.vben-menu.is-vertical:not(.vben-menu.is-collapse) {
+  & .vben-menu-item,
+  & .vben-sub-menu-content,
+  & .vben-menu-item-group__title {
+    padding-left: calc(
+      var(--menu-item-indent) + var(--menu-level) * var(--menu-item-indent)
+    );
+    white-space: nowrap;
+  }
+
+  & > .vben-sub-menu > .vben-menu > .vben-menu-item {
+    padding-left: calc(
+      0px + var(--menu-item-indent) + var(--menu-level) *
+        var(--menu-item-indent)
+    );
+  }
+
+  & > .vben-sub-menu > .vben-sub-menu-content {
+    padding-left: calc(var(--menu-item-indent) - 8px);
+  }
+
+  & > .vben-menu-item {
+    padding-left: calc(var(--menu-item-indent) - 8px);
+  }
+}
+
+.vben-menu.is-collapse {
+  .vben-menu__icon {
+    margin-right: 0;
+  }
+
+  .vben-sub-menu__icon-arrow {
+    display: none;
+  }
+
+  .vben-sub-menu-content,
+  .vben-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--menu-item-collapse-padding-y)
+      var(--menu-item-collapse-padding-x);
+    margin: var(--menu-item-collapse-margin-y)
+      var(--menu-item-collapse-margin-x);
+    transition: all 0.3s;
+
+    &.is-active {
+      background: var(--menu-item-active-background-color) !important;
+      border-radius: var(--menu-item-radius);
+    }
+  }
+}
+
+.vben-menu-item,
+.vben-sub-menu-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--menu-item-height);
+  padding: var(--menu-item-padding-y) var(--menu-item-padding-x);
+  margin: 0 var(--menu-item-margin-x) var(--menu-item-margin-y)
+    var(--menu-item-margin-x);
+  font-size: var(--menu-font-size) !important;
+  color: var(--menu-item-color);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  list-style: none;
+  background: var(--menu-item-background-color);
+  border: none;
+  border-radius: var(--menu-item-radius);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    padding 0.15s ease,
+    border-color 0.15s ease;
+
+  .vben-menu__icon {
+    transition: transform 0.25s;
+  }
+
+  &:hover .vben-menu__icon {
+    transform: scale(1.2);
+  }
+
+  &:hover,
+  &:focus {
+    outline: none;
+  }
+
+  * {
+    vertical-align: bottom;
+  }
+}
+
+.vben-menu-item:hover,
+.vben-sub-menu-content:hover {
+  color: var(--menu-item-hover-color);
+  background: var(--menu-item-hover-background-color);
+}
+
+.vben-menu-item.is-active {
+  color: var(--menu-item-active-color);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--menu-item-active-background-color);
+}
+
+.vben-menu__title {
+  max-width: var(--menu-title-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--menu-font-size) !important;
+  white-space: nowrap;
+  opacity: 1;
+}
+
+.vben-menu__icon {
+  flex-shrink: 0;
+  width: var(--menu-item-icon-size);
+  height: var(--menu-item-icon-size);
+  margin-right: 8px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* 子菜单内容（与 menu-item 混入相同的基础样式） */
+.vben-sub-menu-content__icon-arrow {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: inherit;
+  margin-top: -8px;
+  margin-right: 0;
+  font-weight: normal;
+  opacity: 1;
+  transition: transform 0.25s ease;
+}
+
+.vben-sub-menu-content__title {
+  max-width: var(--menu-title-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--menu-font-size) !important;
+  white-space: nowrap;
+  opacity: 1;
+}
+
+.vben-menu-item__content {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  height: var(--menu-item-height);
+}
+
+/* 对齐官方 menu.vue：折叠首层菜单项的 tooltip 触发器（absolute 全尺寸居中） */
+.vben-menu-tooltip__trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--menu-item-padding-x);
+  font-size: var(--menu-font-size) !important;
+  line-height: var(--menu-item-height);
+}
+
+.vben-menu-item__content span {
+  max-width: var(--menu-title-width);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--menu-font-size) !important;
+  white-space: nowrap;
+  opacity: 1;
+}
+
+.vben-menu-item-group__title {
+  padding-left: var(--menu-item-indent);
+  font-size: var(--menu-font-size);
+  color: var(--menu-item-color);
+  opacity: 0.7;
+}
+
+/* 子菜单容器 */
+.vben-sub-menu {
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
+  background: var(--menu-submenu-background-color);
+  fill: var(--menu-item-color);
+}
+
+.vben-sub-menu.is-active > .vben-sub-menu-content {
+  color: var(--menu-submenu-active-color);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--menu-submenu-active-background-color);
+  fill: var(--menu-submenu-active-color);
+}
+
+/* 折叠态下的子菜单内容 */
+.vben-menu.is-collapse .vben-sub-menu-content,
+.vben-menu.is-collapse .vben-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== antd 组件外观 token（用于复刻官方 ant-design-vue 渲染的控件） =====
+   官方 web-antd 的演示页、个人中心的表单/下拉等由 ant-design-vue 渲染；
+   React 端不引入 antd，这里按官方实测的计算样式复刻其底色、边框、圆角、内距与投影。
+   暗色取值来自官方 antd v5 darkAlgorithm 派生结果（colorPrimary 被压暗成 #035ec7，
+   danger 走暗色 error 色阶 #dc3355、选中标签底色 rgba(242,242,242,.12)；
+   浅色仍等于种子色，即 vben 的 --primary）。 */
+.antd-ui {
+  --antd-card-bg: #ffffff;
+  --antd-border: #d9d9d9;
+  --antd-text: rgb(0 0 0 / 88%);
+  --antd-placeholder: rgb(0 0 0 / 25%);
+  --antd-primary: hsl(var(--primary));
+  --antd-danger: #ff4d4f;
+  --antd-tag-bg: rgb(0 0 0 / 6%);
+  --antd-tag-border: rgb(5 5 5 / 6%);
+  --antd-shadow: 0 2px 0 0 rgb(0 0 0 / 2%);
+  --antd-shadow-primary: 0 2px 0 0 hsl(var(--primary) / 10%);
+}
+
+.dark .antd-ui {
+  --antd-card-bg: #1c1e23;
+  --antd-border: #36363a;
+  --antd-text: rgb(242 242 242 / 85%);
+  --antd-placeholder: rgb(242 242 242 / 25%);
+  --antd-primary: #035ec7;
+  --antd-danger: #dc3355;
+  --antd-tag-bg: rgb(242 242 242 / 12%);
+  --antd-tag-border: rgb(235 235 252 / 23%);
+  --antd-shadow: 0 2px 0 0 rgb(242 242 242 / 4%);
+  --antd-shadow-primary: 0 2px 0 0 rgb(106 163 250 / 16%);
+}
