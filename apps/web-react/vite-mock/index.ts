@@ -24,7 +24,10 @@ function b64url(input: string): string {
 function generateAccessToken(user: Record<string, unknown>): string {
   const header = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const payload = b64url(
-    JSON.stringify({ ...user, exp: Math.floor(Date.now() / 1000) + 7 * 24 * 3600 }),
+    JSON.stringify({
+      ...user,
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 3600,
+    }),
   );
   const signature = createHmac('sha256', ACCESS_TOKEN_SECRET)
     .update(`${header}.${payload}`)
@@ -111,7 +114,13 @@ function mockMiddleware(): Connect.NextHandleFunction {
         sendJson(res, responseError('Username or password is incorrect.'), 403);
         return;
       }
-      sendJson(res, responseSuccess({ ...findUser, accessToken: generateAccessToken(findUser) }));
+      sendJson(
+        res,
+        responseSuccess({
+          ...findUser,
+          accessToken: generateAccessToken(findUser),
+        }),
+      );
       return;
     }
 
@@ -136,7 +145,9 @@ function mockMiddleware(): Connect.NextHandleFunction {
         sendJson(res, responseError('Unauthorized'), 401);
         return;
       }
-      const codes = MOCK_CODES.find((item) => item.username === userinfo.username)?.codes ?? [];
+      const codes =
+        MOCK_CODES.find((item) => item.username === userinfo.username)?.codes ??
+        [];
       sendJson(res, responseSuccess(codes));
       return;
     }
@@ -157,7 +168,9 @@ function mockMiddleware(): Connect.NextHandleFunction {
         sendJson(res, responseError('Unauthorized'), 401);
         return;
       }
-      const menus = MOCK_MENUS.find((item) => item.username === userinfo.username)?.menus ?? [];
+      const menus =
+        MOCK_MENUS.find((item) => item.username === userinfo.username)?.menus ??
+        [];
       sendJson(res, responseSuccess(menus));
       return;
     }
