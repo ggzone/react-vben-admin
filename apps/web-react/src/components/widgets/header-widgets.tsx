@@ -18,20 +18,32 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#/components/ui/tooltip';
 import { SUPPORT_LANGUAGES } from '#/constants';
 import { cn } from '#/lib/utils';
-import { setLocale, type SupportedLanguagesType } from '#/locales';
+import { $t, setLocale, type SupportedLanguagesType } from '#/locales';
 import { usePreferencesStore } from '#/preferences/store';
 import { useTabbarStore } from '#/stores/tabbar';
 
 /**
  * 语言切换 —— 对齐官方 VbenDropdownRadioMenu（单选态，选中项带勾选标记）
+ *
+ * tooltip 内建在这里而不是外层 withTip：下拉展开时必须把 tooltip 关掉，
+ * 否则会出现「语言切换」气泡和下拉菜单同时浮在触发器下面（官方不会同时出现）。
  */
 export function LanguageToggle({ className }: { className?: string }) {
   const preferences = usePreferencesStore((state) => state.preferences);
   const updatePreferences = usePreferencesStore(
     (state) => state.updatePreferences,
   );
+  /** 下拉是否展开 */
+  const [menuOpen, setMenuOpen] = useState(false);
+  /** tooltip 自身状态（受控，便于被下拉强行压制） */
+  const [tipOpen, setTipOpen] = useState(false);
 
   function handleUpdate(value: SupportedLanguagesType) {
     updatePreferences({ app: { locale: value } });
@@ -39,32 +51,56 @@ export function LanguageToggle({ className }: { className?: string }) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <IconButton
-          className={cn('hover:animate-[shrink_0.3s_ease-in-out]', className)}
-        >
-          <Languages className="size-4 text-foreground" />
-        </IconButton>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-30">
-        {SUPPORT_LANGUAGES.map((item) => (
-          <button
-            key={item.value}
-            className="relative flex w-full cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
-            type="button"
-            onClick={() => handleUpdate(item.value)}
+    <Tooltip
+      delayDuration={200}
+      open={menuOpen ? false : tipOpen}
+      onOpenChange={setTipOpen}
+    >
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center">
+          <DropdownMenu
+            open={menuOpen}
+            onOpenChange={(val) => {
+              setMenuOpen(val);
+              // 下拉展开时把 tooltip 彻底关掉（只改 open 表达式不够：
+              // 菜单关闭后 tipOpen 仍是 true，鼠标已移开也会立刻把气泡弹回来）
+              if (val) setTipOpen(false);
+            }}
           >
-            <span>{item.label}</span>
-            {preferences.app.locale === item.value && (
-              <span className="absolute right-2 flex size-3.5 items-center justify-center">
-                <Check className="size-4" />
-              </span>
-            )}
-          </button>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <IconButton
+                className={cn(
+                  'hover:animate-[shrink_0.3s_ease-in-out]',
+                  className,
+                )}
+              >
+                <Languages className="size-4 text-foreground" />
+              </IconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-30">
+              {SUPPORT_LANGUAGES.map((item) => (
+                <button
+                  key={item.value}
+                  className="relative flex w-full cursor-pointer items-center rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                  type="button"
+                  onClick={() => handleUpdate(item.value)}
+                >
+                  <span>{item.label}</span>
+                  {preferences.app.locale === item.value && (
+                    <span className="absolute right-2 flex size-3.5 items-center justify-center">
+                      <Check className="size-4" />
+                    </span>
+                  )}
+                </button>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        {$t('preferences.widget.languageToggle')}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

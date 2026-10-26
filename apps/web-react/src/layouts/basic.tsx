@@ -235,12 +235,9 @@ export function BasicLayout() {
           <ThemeToggle className="mt-0.5 mr-1" />,
           'theme',
         )}
-      {w.languageToggle &&
-        withTip(
-          $t('preferences.widget.languageToggle'),
-          <LanguageToggle className="mr-1" />,
-          'language',
-        )}
+      {/* LanguageToggle 自带 tooltip（受控），下拉展开时会强制关掉 tooltip，
+          因此这里不再套 withTip——套两层会出现气泡与下拉并存 */}
+      {w.languageToggle && <LanguageToggle className="mr-1" />}
       {w.timezone && <TimezoneButton className="mt-0.5 mr-1" />}
       {w.fullscreen &&
         withTip(
