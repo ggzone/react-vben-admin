@@ -7,6 +7,9 @@ import { initStores } from '@vben/stores';
 import '@vben/styles';
 import '@vben/styles/antd';
 
+// 本地确定性渲染：注册离线图标集（避免运行时拉取 api.iconify.design 的网络抖动）
+import './iconify-offline';
+
 import { useTitle } from '@vueuse/core';
 
 import { $t, setupI18n } from '#/locales';

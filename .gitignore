@@ -59,3 +59,7 @@ vite.config.ts.*
 skills-lock.json
 .atomcode
 datalog
+
+# 本地探针脚本与截图（不入库）
+.tmp/
+shot/
