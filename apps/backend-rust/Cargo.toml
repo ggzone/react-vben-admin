@@ -1,0 +1,32 @@
+[package]
+name = "vben-backend-rust"
+version = "5.7.0"
+edition = "2021"
+description = "Vben Admin React 版 Rust 后端（axum + sqlx + SQLite），接口契约与前端 1:1 对齐"
+license = "MIT"
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors", "fs", "trace"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8", default-features = false, features = [
+  "runtime-tokio",
+  "sqlite",
+  "macros",
+  "migrate",
+  "json",
+] }
+jsonwebtoken = "9"
+argon2 = "0.5"
+dotenvy = "0.15"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

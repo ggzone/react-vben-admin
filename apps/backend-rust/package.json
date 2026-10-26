@@ -1,0 +1,14 @@
+{
+  "name": "@vben/backend-rust",
+  "version": "5.7.0",
+  "description": "Vben Admin Rust 后端（axum + sqlx + SQLite）",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "cargo run",
+    "build": "cargo build --release",
+    "check": "cargo check",
+    "fmt": "cargo fmt",
+    "clippy": "cargo clippy -- -D warnings"
+  }
+}
