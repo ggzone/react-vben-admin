@@ -738,6 +738,33 @@ html.dark::view-transition-new(root) {
   z-index: 1;
 }
 
+/* —— 模态弹层打开时的滚动条补偿 ——
+   Radix 的 react-remove-scroll-bar 用 `body{margin-right:10px !important}` 让出被移除的滚动条，
+   但本项目 `body`/`#app` 都是 width:100%（官方同样 size-full），margin 不会收窄内容框，
+   #app 仍然按 1600px 铺开 → 主内容整体右移 10px 并重排（时区弹窗、锁屏、偏好抽屉都会抖）。
+   官方 useScrollLock 写的是 `body{padding-right:10px}`（padding 才收窄内容框），
+   这里用更高特异度（html body[...] 压过注入样式里的 body[...]）覆盖成同一效果。
+   `--removed-body-scroll-bar-size` 由该库在锁定时写入，页面本来没有滚动条时其值为 0px，不会误加。 */
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: var(--removed-body-scroll-bar-size, 0px) !important;
+}
+
+/* 视图口尺寸的 fixed 容器（官方 SCROLL_FIXED_CLASS：header+tabbar 外壳）不吃 body 的 padding，
+   要单独补同样的宽度 */
+html body[data-scroll-locked] ._scroll__fixed_ {
+  padding-right: var(--removed-body-scroll-bar-size, 0px) !important;
+}
+
+/* 上面这 10px 的加/撤必须瞬时完成：tailwind 的 `transition-all` 会把 padding-right 也算进动画，
+   关窗时能看到头部先被压窄 10px、再在 200ms 里慢慢弹回（实测 1356→1366 逐帧爬升，就是抖动来源）。
+   这里用显式属性列表把 padding 摘出过渡范围，其余过渡（height/left/width/box-shadow…）保持原样。 */
+._scroll__fixed_ {
+  transition-property:
+    height, width, left, right, top, bottom, margin, margin-top, margin-left,
+    transform, box-shadow, opacity, background-color, border-color, color;
+}
+
 /* 标签栏 chrome 风格 */
 .tabs-chrome__item:not(.dragging):hover:not(.is-active)
   + .tabs-chrome__item

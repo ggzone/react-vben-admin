@@ -5,10 +5,27 @@ import * as React from 'react';
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { Check, ChevronRight, Circle } from 'lucide-react';
 
-import { useFixedScrollbarCompensation } from '#/lib/scroll-lock';
 import { cn } from '#/lib/utils';
 
-const DropdownMenu = DropdownMenuPrimitive.Root;
+/**
+ * DropdownMenu 根组件 —— 默认非模态（modal=false）
+ *
+ * 官方用 reka-ui 的 DropdownMenu：`modal` 虽然默认 true，但 reka 的下拉菜单**不做 body 滚动锁**
+ * （reka 只有 Dialog / AlertDialog / Combobox 等会 useBodyScrollLock，实测官方打开下拉时
+ * documentElement.clientWidth 不变、body 无 overflow:hidden）。
+ *
+ * 而 @radix-ui/react-dropdown-menu 的 modal=true 会包一层 react-remove-scroll：打开瞬间
+ * `body{overflow:hidden}` 抹掉文档滚动条 → 视口宽度 +15px → 固定头部/内容整体位移，
+ * 表现为「点语言切换按钮，页面抖一下」（真实 Windows Chrome 有经典滚动条时必现）。
+ *
+ * 这里默认关闭 modal，只保留 Radix 的 Esc / 外部点击关闭能力，与官方行为对齐。
+ */
+function DropdownMenu({
+  modal = false,
+  ...props
+}: DropdownMenuPrimitive.DropdownMenuProps) {
+  return <DropdownMenuPrimitive.Root modal={modal} {...props} />;
+}
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
 const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
@@ -51,14 +68,12 @@ const DropdownMenuSubContent = React.forwardRef<
 ));
 DropdownMenuSubContent.displayName = 'DropdownMenuSubContent';
 
-/** Portal 内层组件：菜单打开时才挂载，滚动条补偿仅在弹层真实打开期间生效。
-    （hook 不能放在外层 wrapper——wrapper 作为 Root 的 child 始终挂载，
-    关闭状态的菜单也会把 padding 永久打上） */
+/** Portal 内层组件。注意：非模态下拉不会隐藏滚动条，因此**不能**再做 fixed 节点滚动条补偿
+    （补偿会把 padding-right 加上却没有对应的滚动条消失，反而制造抖动）。 */
 const DropdownMenuContentInner = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
 >(({ className, sideOffset = 4, ...props }, ref) => {
-  useFixedScrollbarCompensation('dropdown-content');
   return (
     <DropdownMenuPrimitive.Content
       ref={ref}

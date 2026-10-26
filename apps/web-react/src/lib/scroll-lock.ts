@@ -1,62 +1,18 @@
-import { useEffect } from 'react';
-
-/** 测量经典滚动条宽度（探针法，弹窗锁滚动条后依然有效，对齐官方 getScrollbarWidth） */
-function getScrollbarWidth(): number {
-  const scrollDiv = document.createElement('div');
-  scrollDiv.style.visibility = 'hidden';
-  scrollDiv.style.overflow = 'scroll';
-  scrollDiv.style.position = 'absolute';
-  scrollDiv.style.top = '-9999px';
-  document.body.append(scrollDiv);
-  const innerDiv = document.createElement('div');
-  scrollDiv.append(innerDiv);
-  const scrollbarWidth = scrollDiv.offsetWidth - innerDiv.offsetWidth;
-  scrollDiv.remove();
-  return scrollbarWidth;
-}
-
-/** 页面是否本来就需要滚动条（对齐官方 needsScrollbar） */
-function needsScrollbar(): boolean {
-  return document.documentElement.scrollHeight > window.innerHeight;
-}
-
-let seq = 0;
-
 /**
- * 弹窗打开期间的 fixed 布局节点滚动条补偿（对齐官方 useScrollLock + SCROLL_FIXED_CLASS）：
- * 模态弹窗会隐藏 body 滚动条，视口随之变宽，fixed 头部（width 按 100% 计算）会拉伸产生抖动。
- * 官方做法是给 body 和所有 `_scroll__fixed_` 标记的 fixed 节点同步加 paddingRight=滚动条宽度；
- * Radix(react-remove-scroll) 已补偿 body，这里只补 fixed 节点。
+ * 滚动条补偿工具
  *
- * 注意：本 hook 必须挂在「弹层打开时才挂载」的组件上（Portal 内层）。
+ * 历史：这里原本有一个 `useFixedScrollbarCompensation()`，在弹层打开时给 `_scroll__fixed_`
+ * 节点手工加 padding-right。但 Radix 的滚动锁是在 layout effect 里、由库自己接管 body 的，
+ * JS 侧无论放在 useEffect（晚一帧）还是 useLayoutEffect（与库抢顺序）都无法保证
+ * 「施加/撤销」和「滚动条消失/恢复」发生在同一帧——实测关窗瞬间会有 2 帧把头部压窄 10px。
+ *
+ * 现在改由纯 CSS 解决（见 assets/index.css 的 `html body[data-scroll-locked]`）：
+ * 用 padding-right 覆盖 react-remove-scroll-bar 默认的 margin-right 补偿，
+ * `#app` 内容框保持 1590px 不变，所有 Radix 模态层（Dialog / Select / ContextMenu …）
+ * 一次性覆盖，无需逐个组件挂 hook，也没有时序问题。
+ *
+ * 保留 SCROLL_FIXED_CLASS 仅作为布局骨架的语义标记（探针/回归脚本按它定位 fixed 头部容器）。
  */
-export function useFixedScrollbarCompensation(label = '?') {
-  useEffect(() => {
-    seq += 1; // mySeq 保留用于调试定位
-    const scrollbarWidth = getScrollbarWidth();
-    if (scrollbarWidth <= 0 || !needsScrollbar()) return; // 无经典滚动条或页面不超屏：无需补偿
-    const nodes = [
-      ...document.querySelectorAll<HTMLElement>('._scroll__fixed_'),
-    ];
-    const restores: Array<() => void> = [];
-    for (const node of nodes) {
-      const prevTransition = node.style.transition;
-      const prevPadding = node.style.paddingRight;
-      node.style.transition = 'none';
-      node.style.paddingRight = `${scrollbarWidth}px`;
-      restores.push(() => {
-        node.style.paddingRight = prevPadding;
-        // 官方做法：关闭后下一帧再恢复 transition，避免 padding 回退产生动画
-        requestAnimationFrame(() => {
-          node.style.transition = prevTransition;
-        });
-      });
-    }
-    return () => {
-      for (const restore of restores) restore();
-    };
-  }, [label]);
-}
 
 /** fixed 布局节点标记类（对齐官方 SCROLL_FIXED_CLASS = `_scroll__fixed_`） */
 export const SCROLL_FIXED_CLASS = '_scroll__fixed_';

@@ -5,7 +5,6 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 
-import { useFixedScrollbarCompensation } from '#/lib/scroll-lock';
 import { cn } from '#/lib/utils';
 
 /**
@@ -61,8 +60,8 @@ const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
-  // 对齐官方 DialogOverlay.vue 的 useScrollLock：弹窗打开期间补偿 fixed 布局节点
-  useFixedScrollbarCompensation('dialog-overlay');
+  // 滚动条补偿由 assets/index.css 的 `html body[data-scroll-locked]` 统一处理，
+  // 这里不再做 JS 补偿（否则与 CSS 叠加会二次收窄，关窗时反而抖）
   return (
     <DialogPrimitive.Overlay
       ref={ref}
