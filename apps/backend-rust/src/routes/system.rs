@@ -102,12 +102,14 @@ fn parse_id(raw: Option<&String>, field: &str) -> Result<i64, AppError> {
 /* ============================ 用户 ============================ */
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserListQuery {
+    /// 前端传 camelCase（deptId / pageSize / …），必须 rename_all = camelCase，
+    /// 否则 deptId 收不到 → 部门树点了不过滤（恒返回全部用户）
     pub dept_id: Option<String>,
     pub id: Option<String>,
     pub name: Option<String>,
     pub page: Option<i64>,
-    #[serde(rename = "pageSize")]
     pub page_size: Option<i64>,
     pub remark: Option<String>,
     pub status: Option<String>,
@@ -327,10 +329,10 @@ async fn user_reset_password(
 /* ============================ 角色 ============================ */
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RoleListQuery {
     pub name: Option<String>,
     pub page: Option<i64>,
-    #[serde(rename = "pageSize")]
     pub page_size: Option<i64>,
     pub status: Option<String>,
 }
@@ -788,11 +790,12 @@ async fn dept_delete(
 /* ============================ 字典 ============================ */
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DictListQuery {
+    /// 前端传 dictCode（camelCase），必须 rename_all 才会被识别
     pub dict_code: Option<String>,
     pub name: Option<String>,
     pub page: Option<i64>,
-    #[serde(rename = "pageSize")]
     pub page_size: Option<i64>,
 }
 

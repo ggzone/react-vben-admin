@@ -133,9 +133,36 @@ pub async fn list_users(
     let name_like = format!("%{}%", escape_like(name));
     let remark_like = format!("%{}%", escape_like(remark));
 
+    // 部门过滤：按「该部门 + 其所有下级部门」过滤
+    //
+    // 官方 backend-mock 用的是精确匹配（item.deptId === deptId），但那里部门 id
+    // 是随机 UUID、点击本就没有业务含义；本项目的数据是真实关联的，精确匹配会导致
+    // 「点根部门 0 条」「点研发中心看不到前端组的人」，与树形结构的直觉相反。
+    // 因此改为递归包含子部门：点父级 = 看全部下属，点根部门 = 全部用户。
+    let dept_ids: Vec<i64> = match dept_id {
+        Some(root) => sqlx::query_scalar(
+            r#"WITH RECURSIVE tree(id) AS (
+                   SELECT id FROM system_dept WHERE id = ?
+                   UNION ALL
+                   SELECT d.id FROM system_dept d JOIN tree t ON d.pid = t.id
+               )
+               SELECT id FROM tree"#,
+        )
+        .bind(root)
+        .fetch_all(pool)
+        .await?,
+        None => Vec::new(),
+    };
+
     let mut conditions = vec!["1=1".to_string()];
     if dept_id.is_some() {
-        conditions.push("dept_id = ?".to_string());
+        if dept_ids.is_empty() {
+            // 部门不存在 / 无该部门 → 空结果，而不是退化成「不过滤」
+            conditions.push("1=0".to_string());
+        } else {
+            let placeholders = vec!["?"; dept_ids.len()].join(",");
+            conditions.push(format!("dept_id IN ({placeholders})"));
+        }
     }
     if id.is_some() {
         conditions.push("id = ?".to_string());
@@ -162,8 +189,9 @@ pub async fn list_users(
     let mut c = sqlx::query_scalar::<_, i64>(&count_sql);
     macro_rules! bind_all {
         ($q:expr) => {{
-            if let Some(v) = dept_id {
-                $q = $q.bind(v);
+            // 部门条件：IN (?,?,…) —— 与上面 dept_ids 的占位符顺序一一对应
+            for v in dept_ids.iter() {
+                $q = $q.bind(*v);
             }
             if let Some(v) = id {
                 $q = $q.bind(v);
