@@ -1187,14 +1187,49 @@ html body[data-scroll-locked] ._scroll__fixed_ {
   justify-content: center;
 }
 
-/* ===== antd 组件外观 token（用于复刻官方 ant-design-vue 渲染的控件） =====
+/* ===== antd 组件外观 token =====
    官方 web-antd 的演示页、个人中心的表单/下拉等由 ant-design-vue 渲染；
    React 端不引入 antd，这里按官方实测的计算样式复刻其底色、边框、圆角、内距与投影。
    暗色取值来自官方 antd v5 darkAlgorithm 派生结果（colorPrimary 被压暗成 #035ec7，
    danger 走暗色 error 色阶 #dc3355、选中标签底色 rgba(242,242,242,.12)；
    浅色仍等于种子色，即 vben 的 --primary）。 */
+
+/* 根作用域副本：抽屉 / 弹窗 / message 经 Portal 挂到 body，脱离 .antd-ui 后
+   var(--antd-*) 会解析失败（表现为边框回落成 currentColor、主按钮丢掉底色）。
+   这里把同一组值声明到 :root / .dark，弹层内部即可正常取值。 */
+:root {
+  --antd-card-bg: #ffffff;
+  --antd-input-bg: #ffffff;
+  --antd-border: #d9d9d9;
+  --antd-border-strong: #d9d9d9;
+  --antd-text: rgb(0 0 0 / 88%);
+  --antd-placeholder: rgb(0 0 0 / 25%);
+  --antd-primary: hsl(var(--primary));
+  --antd-danger: #ff4d4f;
+  --antd-tag-bg: rgb(0 0 0 / 6%);
+  --antd-tag-border: rgb(5 5 5 / 6%);
+  --antd-shadow: 0 2px 0 0 rgb(0 0 0 / 2%);
+  --antd-shadow-primary: 0 2px 0 0 hsl(var(--primary) / 10%);
+}
+
+.dark {
+  --antd-card-bg: #1c1e23;
+  --antd-input-bg: #1c1e23;
+  --antd-border: #36363a;
+  --antd-border-strong: #424242;
+  --antd-text: rgb(242 242 242 / 85%);
+  --antd-placeholder: rgb(242 242 242 / 25%);
+  --antd-primary: #035ec7;
+  --antd-danger: #dc3355;
+  --antd-tag-bg: rgb(242 242 242 / 12%);
+  --antd-tag-border: rgb(235 235 252 / 23%);
+  --antd-shadow: 0 2px 0 0 rgb(242 242 242 / 4%);
+  --antd-shadow-primary: 0 2px 0 0 rgb(106 163 250 / 16%);
+}
+
 .antd-ui {
   --antd-card-bg: #ffffff;
+  --antd-input-bg: #ffffff;
   --antd-border: #d9d9d9;
   --antd-text: rgb(0 0 0 / 88%);
   --antd-placeholder: rgb(0 0 0 / 25%);
@@ -1206,8 +1241,19 @@ html body[data-scroll-locked] ._scroll__fixed_ {
   --antd-shadow-primary: 0 2px 0 0 hsl(var(--primary) / 10%);
 }
 
+/* antd 按钮投影：tailwind 的 `shadow-[var(--antd-shadow)]` 会被当成阴影「颜色」处理，
+   计算出来是全透明，这里改由 CSS 类直接赋值。 */
+.antd-btn {
+  box-shadow: var(--antd-shadow);
+}
+
+.antd-btn-primary {
+  box-shadow: var(--antd-shadow-primary);
+}
+
 .dark .antd-ui {
   --antd-card-bg: #1c1e23;
+  --antd-input-bg: #1c1e23;
   --antd-border: #36363a;
   --antd-text: rgb(242 242 242 / 85%);
   --antd-placeholder: rgb(242 242 242 / 25%);

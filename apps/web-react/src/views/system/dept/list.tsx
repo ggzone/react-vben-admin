@@ -22,7 +22,8 @@ import {
 } from '#/api/system';
 import { $t } from '#/locales';
 import {
-  BTN_BASE,
+  antdButtonText,
+  BTN_DANGER,
   FIELD_CLASS,
   FormDrawer,
   FormItem,
@@ -444,14 +445,11 @@ export default function SystemDept() {
 
       <FormDrawer
         confirmLoading={saving}
+        layout="vertical"
         open={open}
         prependFooter={
-          <button
-            className={`${BTN_BASE} border-transparent bg-[var(--antd-danger)] text-white hover:opacity-90`}
-            type="button"
-            onClick={onReset}
-          >
-            {$t('common.reset')}
+          <button className={BTN_DANGER} type="button" onClick={onReset}>
+            {antdButtonText($t('common.reset'))}
           </button>
         }
         title={
@@ -463,7 +461,7 @@ export default function SystemDept() {
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
       >
-        <div className="flex flex-col gap-4">
+        <div className="mx-4 flex flex-col">
           <FormItem
             error={errors.name}
             label={$t('system.dept.deptName')}
@@ -482,7 +480,7 @@ export default function SystemDept() {
           <FormItem label={$t('system.dept.parentDept')}>
             <TreeSelect
               options={parentOptions}
-              placeholder="不选则为顶级部门"
+              placeholder={$t('ui.placeholder.select')}
               value={form.pid}
               onChange={(v) => setForm((prev) => ({ ...prev, pid: v }))}
             />
@@ -500,11 +498,11 @@ export default function SystemDept() {
           </FormItem>
 
           <FormItem error={errors.remark} label={$t('system.dept.remark')}>
+            {/* 官方 schema 虽写了 showCount，但 antd 侧实测未渲染字数（文本域 460×76） */}
             <TextArea
               maxLength={50}
               placeholder={$t('ui.placeholder.input')}
               rows={3}
-              showCount
               value={form.remark}
               onChange={(v) => setForm((prev) => ({ ...prev, remark: v }))}
             />

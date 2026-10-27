@@ -28,7 +28,6 @@ import {
   FormDrawer,
   FormItem,
   FIELD_CLASS,
-  FieldHint,
   RadioButtons,
   TreeSelect,
   type TreeOption,
@@ -631,7 +630,7 @@ export default function SystemUser() {
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col">
           <FormItem
             error={errors.username}
             label={$t('system.user.name')}
@@ -700,10 +699,6 @@ export default function SystemUser() {
               onChange={(v) => setForm((prev) => ({ ...prev, status: v }))}
             />
           </FormItem>
-
-          <FieldHint>
-            内置账号（id ≤ 3）不可停用或删除，避免把自己锁在门外。
-          </FieldHint>
         </div>
       </FormDrawer>
     </SystemPage>

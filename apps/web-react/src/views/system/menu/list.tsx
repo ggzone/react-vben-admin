@@ -30,7 +30,8 @@ import {
 
 import { $t } from '#/locales';
 import {
-  CheckboxField,
+  CheckboxItem,
+  FormDivider,
   FormDrawer,
   FormItem,
   FIELD_CLASS,
@@ -745,6 +746,7 @@ export default function SystemMenu() {
       </div>
 
       <FormDrawer
+        colon
         confirmLoading={saving}
         open={open}
         title={
@@ -756,31 +758,18 @@ export default function SystemMenu() {
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
       >
-        <div className="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
+        <div className="mx-4 grid grid-cols-1 gap-x-4 md:grid-cols-2">
           {/* 类型 */}
           <div className="md:col-span-2">
             <FormItem label={$t('system.menu.type')}>
-              <div className="flex flex-wrap items-center">
-                {TYPE_OPTIONS.map((opt) => {
-                  const active = opt.value === form.type;
-                  return (
-                    <button
-                      className={`-ml-px inline-flex h-8 cursor-pointer items-center justify-center border px-[15px] text-sm leading-[22px] first:ml-0 first:rounded-l-lg last:rounded-r-lg ${
-                        active
-                          ? 'z-10 border-[var(--antd-primary)] bg-[var(--antd-primary)] text-white'
-                          : 'border-[var(--antd-border)] bg-transparent text-[var(--antd-text)] hover:border-[var(--antd-primary)] hover:text-[var(--antd-primary)]'
-                      }`}
-                      key={opt.value}
-                      type="button"
-                      onClick={() =>
-                        setForm((prev) => ({ ...prev, type: opt.value }))
-                      }
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <RadioButtons
+                options={TYPE_OPTIONS.map((opt) => ({
+                  label: opt.label,
+                  value: opt.value,
+                }))}
+                value={form.type}
+                onChange={(v) => setForm((prev) => ({ ...prev, type: v }))}
+              />
             </FormItem>
           </div>
 
@@ -804,7 +793,7 @@ export default function SystemMenu() {
           <FormItem label={$t('system.menu.parent')}>
             <TreeSelect
               options={parentOptions}
-              placeholder="不选则为顶级菜单"
+              placeholder={$t('ui.placeholder.select')}
               value={form.pid}
               onChange={(v) => setForm((prev) => ({ ...prev, pid: v }))}
             />
@@ -844,10 +833,11 @@ export default function SystemMenu() {
             </FormItem>
           )}
 
-          {/* 激活路径 */}
+          {/* 激活路径（官方 help → label 右侧 ? 图标，不是行内提示） */}
           {showActivePath && (
             <FormItem
               error={errors.activePath}
+              help={$t('system.menu.activePathHelp')}
               label={$t('system.menu.activePath')}
             >
               <input
@@ -858,11 +848,6 @@ export default function SystemMenu() {
                   setForm((prev) => ({ ...prev, activePath: e.target.value }))
                 }
               />
-              {!errors.activePath && (
-                <div className="text-xs leading-[20px] whitespace-pre-line text-[rgba(242,242,242,0.45)]">
-                  {$t('system.menu.activePathHelp')}
-                </div>
-              )}
             </FormItem>
           )}
 
@@ -907,44 +892,40 @@ export default function SystemMenu() {
             </FormItem>
           )}
 
-          {/* 页面组件 */}
+          {/* 页面组件（官方无 col-span，占左半列） */}
           {showComponent && (
-            <div className="md:col-span-2">
-              <FormItem
-                error={errors.component}
-                label={$t('system.menu.component')}
-                required
-              >
-                <input
-                  className={`${FIELD_CLASS} font-mono`}
-                  placeholder="/views/dashboard/index"
-                  value={form.component}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, component: e.target.value }))
-                  }
-                />
-              </FormItem>
-            </div>
+            <FormItem
+              error={errors.component}
+              label={$t('system.menu.component')}
+              required
+            >
+              <input
+                className={`${FIELD_CLASS} font-mono`}
+                placeholder="/views/dashboard/index"
+                value={form.component}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, component: e.target.value }))
+                }
+              />
+            </FormItem>
           )}
 
-          {/* 链接地址（内嵌 / 外链） */}
+          {/* 链接地址（内嵌 / 外链，官方同样是单列） */}
           {showLink && (
-            <div className="md:col-span-2">
-              <FormItem
-                error={errors.linkSrc}
-                label={$t('system.menu.linkSrc')}
-                required
-              >
-                <input
-                  className={FIELD_CLASS}
-                  placeholder="https://..."
-                  value={form.linkSrc}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, linkSrc: e.target.value }))
-                  }
-                />
-              </FormItem>
-            </div>
+            <FormItem
+              error={errors.linkSrc}
+              label={$t('system.menu.linkSrc')}
+              required
+            >
+              <input
+                className={FIELD_CLASS}
+                placeholder="https://..."
+                value={form.linkSrc}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, linkSrc: e.target.value }))
+                }
+              />
+            </FormItem>
           )}
 
           {/* 权限标识 */}
@@ -1034,55 +1015,65 @@ export default function SystemMenu() {
             </>
           )}
 
-          {/* 高级设置 */}
+          {/* 高级设置（官方 Divider + 各自半列 Checkbox） */}
           {showAdvanced && (
-            <div className="md:col-span-2">
-              <div className="mb-3 border-t border-[var(--antd-border)] pt-4 text-sm text-[rgba(242,242,242,0.65)]">
-                {$t('system.menu.advancedSettings')}
+            <>
+              <div className="md:col-span-2">
+                <FormDivider>{$t('system.menu.advancedSettings')}</FormDivider>
               </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {type === 'menu' && (
-                  <CheckboxField
+              {type === 'menu' && (
+                <div className="pb-4">
+                  <CheckboxItem
                     checked={form.keepAlive}
                     label={$t('system.menu.keepAlive')}
                     onChange={(v) =>
                       setForm((prev) => ({ ...prev, keepAlive: v }))
                     }
                   />
-                )}
-                {['embedded', 'menu'].includes(type) && (
-                  <CheckboxField
+                </div>
+              )}
+              {['embedded', 'menu'].includes(type) && (
+                <div className="pb-4">
+                  <CheckboxItem
                     checked={form.affixTab}
                     label={$t('system.menu.affixTab')}
                     onChange={(v) =>
                       setForm((prev) => ({ ...prev, affixTab: v }))
                     }
                   />
-                )}
-                <CheckboxField
+                </div>
+              )}
+              <div className="pb-4">
+                <CheckboxItem
                   checked={form.hideInMenu}
                   label={$t('system.menu.hideInMenu')}
                   onChange={(v) =>
                     setForm((prev) => ({ ...prev, hideInMenu: v }))
                   }
                 />
-                {['catalog', 'menu'].includes(type) && (
-                  <CheckboxField
+              </div>
+              {['catalog', 'menu'].includes(type) && (
+                <div className="pb-4">
+                  <CheckboxItem
                     checked={form.hideChildrenInMenu}
                     label={$t('system.menu.hideChildrenInMenu')}
                     onChange={(v) =>
                       setForm((prev) => ({ ...prev, hideChildrenInMenu: v }))
                     }
                   />
-                )}
-                <CheckboxField
+                </div>
+              )}
+              <div className="pb-4">
+                <CheckboxItem
                   checked={form.hideInBreadcrumb}
                   label={$t('system.menu.hideInBreadcrumb')}
                   onChange={(v) =>
                     setForm((prev) => ({ ...prev, hideInBreadcrumb: v }))
                   }
                 />
-                <CheckboxField
+              </div>
+              <div className="pb-4">
+                <CheckboxItem
                   checked={form.hideInTab}
                   label={$t('system.menu.hideInTab')}
                   onChange={(v) =>
@@ -1090,7 +1081,7 @@ export default function SystemMenu() {
                   }
                 />
               </div>
-            </div>
+            </>
           )}
         </div>
       </FormDrawer>

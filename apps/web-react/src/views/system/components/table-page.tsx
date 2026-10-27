@@ -153,7 +153,7 @@ export function PrimaryBtn({
 }) {
   return (
     <button
-      className="inline-flex h-8 cursor-pointer items-center justify-center gap-1 rounded-lg border-transparent bg-[var(--antd-primary)] px-[15px] text-sm leading-[22px] text-white transition-opacity hover:opacity-90"
+      className="antd-btn-primary inline-flex h-8 cursor-pointer items-center justify-center gap-1 rounded-lg border-transparent bg-[var(--antd-primary)] px-[15px] text-sm leading-[22px] text-white transition-opacity hover:opacity-90"
       type="button"
       onClick={onClick}
     >
@@ -365,14 +365,14 @@ export function QueryActions({
   return (
     <div className="flex items-center justify-end gap-2">
       <button
-        className={`${QUERY_ACTIONS_BTN} border-[var(--antd-border)] bg-[var(--antd-card-bg)] text-[var(--antd-text)] hover:border-[var(--antd-primary)] hover:text-[var(--antd-primary)]`}
+        className={`${QUERY_ACTIONS_BTN} antd-btn border-[var(--antd-border)] bg-[var(--antd-card-bg)] text-[var(--antd-text)] hover:border-[var(--antd-primary)] hover:text-[var(--antd-primary)]`}
         type="button"
         onClick={onReset}
       >
         重 置
       </button>
       <button
-        className={`${QUERY_ACTIONS_BTN} border-transparent bg-[var(--antd-primary)] text-white hover:opacity-90`}
+        className={`${QUERY_ACTIONS_BTN} antd-btn-primary border-transparent bg-[var(--antd-primary)] text-white hover:opacity-90`}
         type="button"
         onClick={onSearch}
       >

@@ -14,18 +14,14 @@ import { createRoot, type Root } from 'react-dom/client';
 import {
   AlertCircle,
   CheckCircle2,
+  CircleAlert,
   Info,
   Loader2,
   XCircle,
 } from 'lucide-react';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '#/components/ui/dialog';
+import { Dialog, DialogContent } from '#/components/ui/dialog';
+import { BTN_DEFAULT, BTN_PRIMARY } from '#/views/system/components/form';
 
 type MessageType = 'error' | 'info' | 'loading' | 'success' | 'warning';
 
@@ -46,24 +42,26 @@ interface MessageItem {
 }
 
 const ICON_MAP: Record<MessageType, React.ReactNode> = {
-  error: <XCircle className="size-4 shrink-0 text-[#e84749]" />,
-  info: <Info className="size-4 shrink-0 text-[#1668dc]" />,
-  loading: <Loader2 className="size-4 shrink-0 animate-spin text-[#1668dc]" />,
-  success: <CheckCircle2 className="size-4 shrink-0 text-[#49aa19]" />,
-  warning: <AlertCircle className="size-4 shrink-0 text-[#d89614]" />,
+  error: <XCircle className="size-3.5 shrink-0 text-[#e84749]" />,
+  info: <Info className="size-3.5 shrink-0 text-[#1668dc]" />,
+  loading: (
+    <Loader2 className="size-3.5 shrink-0 animate-spin text-[#1668dc]" />
+  ),
+  success: <CheckCircle2 className="size-3.5 shrink-0 text-[#49aa19]" />,
+  warning: <AlertCircle className="size-3.5 shrink-0 text-[#d89614]" />,
 };
 
+/** 对齐 antd v5 message（dark）：padding 9px 12px、radius 8、底色 #1f1f1f、无边框 */
 const ITEM_STYLE = [
   'display:inline-flex',
   'align-items:center',
   'gap:8px',
-  'min-height:40px',
-  'padding:9px 16px',
+  'min-height:38px',
+  'padding:9px 12px',
   'border-radius:8px',
-  'border:1px solid #424242',
   'background:#1f1f1f',
-  'box-shadow:0 6px 16px rgba(0,0,0,0.45)',
-  'color:rgba(255,255,255,0.85)',
+  'box-shadow:0 6px 16px 0 rgba(0,0,0,0.08),0 3px 6px -4px rgba(0,0,0,0.12),0 9px 28px 8px rgba(0,0,0,0.05)',
+  'color:rgba(255,255,255,0.88)',
   'font-size:14px',
   'line-height:22px',
   'pointer-events:auto',
@@ -189,6 +187,10 @@ interface ConfirmOptions {
 /**
  * 对齐 antd `Modal.confirm`：给 Promise，确认 resolve(true)、取消 resolve(false)。
  * 官方页面把它包成 `confirm(content, title)` 后在异步流程里 await。
+ *
+ * 视觉取自 playground 实测：宽 416、顶部 100px 居中、radius 10、底色 #242424、
+ * 内距 20px 24px；左侧 22px 警告图标 + 右侧「标题 16/600 + 内容 14/22」；
+ * 按钮行右对齐，按钮为 antd 默认/主色 32 高、radius 8，文案沿用 antd 内置的 Cancel / OK。
  */
 export function confirmModal(options: ConfirmOptions): Promise<boolean> {
   const host = document.createElement('div');
@@ -216,34 +218,41 @@ export function confirmModal(options: ConfirmOptions): Promise<boolean> {
       return (
         <Dialog onOpenChange={(v) => !v && close(false)} open>
           <DialogContent
-            className="max-w-[420px] gap-3"
+            className="antd-ui top-[100px] left-1/2 bottom-auto w-[416px] max-w-none translate-x-[-50%] translate-y-0 gap-0 rounded-[10px] border-0 bg-[#242424] p-0 shadow-lg sm:rounded-[10px]"
             onPointerDownOutside={() => close(false)}
             showClose={false}
           >
-            <DialogHeader>
-              <DialogTitle className="text-base">
-                {options.title ?? '确认'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="text-muted-foreground text-sm leading-[22px]">
-              {options.content}
+            <div className="px-6 py-5">
+              <div className="flex items-start gap-3">
+                <CircleAlert className="size-[22px] shrink-0 text-[#cea440]" />
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="text-base leading-6 font-semibold text-[rgba(242,242,242,0.85)]">
+                    {options.title ?? '确认'}
+                  </div>
+                  {options.content && (
+                    <div className="text-sm leading-[22px] text-[rgba(242,242,242,0.85)]">
+                      {options.content}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-3 flex justify-end gap-2">
+                <button
+                  className={BTN_DEFAULT}
+                  type="button"
+                  onClick={() => close(false)}
+                >
+                  {options.cancelText ?? 'Cancel'}
+                </button>
+                <button
+                  className={BTN_PRIMARY}
+                  type="button"
+                  onClick={() => close(true)}
+                >
+                  {options.okText ?? 'OK'}
+                </button>
+              </div>
             </div>
-            <DialogFooter className="mt-2 gap-2">
-              <button
-                className="border-input hover:bg-accent inline-flex h-8 cursor-pointer items-center justify-center rounded-md border px-4 text-sm transition-colors"
-                type="button"
-                onClick={() => close(false)}
-              >
-                {options.cancelText ?? '取消'}
-              </button>
-              <button
-                className="bg-primary text-primary-foreground inline-flex h-8 cursor-pointer items-center justify-center rounded-md px-4 text-sm transition-opacity hover:opacity-90"
-                type="button"
-                onClick={() => close(true)}
-              >
-                {options.okText ?? '确定'}
-              </button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       );

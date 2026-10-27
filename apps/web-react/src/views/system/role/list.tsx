@@ -30,7 +30,6 @@ import {
   FormDrawer,
   FormItem,
   FIELD_CLASS,
-  FieldHint,
   RadioButtons,
   TEXTAREA_CLASS,
   type CheckTreeNode,
@@ -435,7 +434,7 @@ export default function SystemRole() {
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
       >
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col">
           <FormItem
             error={errors.name}
             label={$t('system.role.roleName')}
@@ -478,7 +477,7 @@ export default function SystemRole() {
             <textarea
               className={TEXTAREA_CLASS}
               placeholder={$t('ui.placeholder.input')}
-              rows={3}
+              rows={2}
               value={form.remark}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, remark: e.target.value }))
@@ -486,7 +485,10 @@ export default function SystemRole() {
             />
           </FormItem>
 
-          <FormItem label={$t('system.role.setPermissions')}>
+          <FormItem
+            className="items-start"
+            label={$t('system.role.setPermissions')}
+          >
             {menusLoading ? (
               <div className="flex h-16 items-center justify-center text-sm text-[rgba(242,242,242,0.45)]">
                 加载中...
@@ -499,8 +501,6 @@ export default function SystemRole() {
               />
             )}
           </FormItem>
-
-          <FieldHint>super / admin / user 为内置角色，不可删除。</FieldHint>
         </div>
       </FormDrawer>
     </SystemPage>
