@@ -42,7 +42,14 @@ export function StatusTag({ status }: { status: number }) {
 }
 
 /** CellSwitch：antd Switch（checkedChildren 启用 / unCheckedChildren 停用，宽度随文字自适应） */
-export function StatusSwitch({ status }: { status: number }) {
+export function StatusSwitch({
+  onChange,
+  status,
+}: {
+  /** 点击时把「期望切换到的状态」交给调用方（对齐官方 CellSwitch beforeChange） */
+  onChange?: (next: number) => void;
+  status: number;
+}) {
   const enabled = status === 1;
   return (
     <button
@@ -52,6 +59,7 @@ export function StatusSwitch({ status }: { status: number }) {
       }`}
       role="switch"
       type="button"
+      onClick={() => onChange?.(enabled ? 0 : 1)}
     >
       <span
         className={`text-xs leading-[20px] text-white ${

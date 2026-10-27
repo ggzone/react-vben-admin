@@ -8,6 +8,8 @@ export type AppRouteComponent =
   | LazyExoticComponent<ComponentType<any>>;
 
 export interface AppRouteMeta {
+  /** 菜单可见性所需的权限码（任一命中即可见；未声明表示所有登录用户可见） */
+  authority?: string[];
   /** 是否固定标签页 */
   affixTab?: boolean;
   /** 徽标类型 */

@@ -19,6 +19,7 @@ const routes: AppRoute[] = [
       {
         component: lazy(() => import('#/views/system/user/list')),
         meta: {
+          authority: ['system:user:list'],
           icon: 'mdi:user',
           title: $t('system.user.title'),
         },
@@ -28,6 +29,7 @@ const routes: AppRoute[] = [
       {
         component: lazy(() => import('#/views/system/role/list')),
         meta: {
+          authority: ['system:role:list'],
           icon: 'mdi:account-group',
           title: $t('system.role.title'),
         },
@@ -37,6 +39,7 @@ const routes: AppRoute[] = [
       {
         component: lazy(() => import('#/views/system/menu/list')),
         meta: {
+          authority: ['system:menu:list'],
           icon: 'mdi:menu',
           title: $t('system.menu.title'),
         },
@@ -46,6 +49,7 @@ const routes: AppRoute[] = [
       {
         component: lazy(() => import('#/views/system/dept/list')),
         meta: {
+          authority: ['system:dept:list'],
           icon: 'charm:organisation',
           title: $t('system.dept.title'),
         },
