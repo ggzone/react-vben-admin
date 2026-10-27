@@ -147,9 +147,12 @@ function ColumnSettingPanel({
   onCancel,
   onToggleOne,
   onToggleAll,
+  fullscreen,
 }: {
   allKeys: string[];
   draftHidden: string[];
+  /** 全屏时工具栏贴视口顶，面板改为向下弹，避免超出可视区域 */
+  fullscreen?: boolean;
   onApply: () => void;
   onCancel: () => void;
   onToggleAll: (hide: boolean) => void;
@@ -159,7 +162,9 @@ function ColumnSettingPanel({
   const allVisible = hidden.size === 0;
   return (
     <div
-      className="antd-popover-shadow absolute -top-[35px] right-3 z-50 w-[234px] overflow-hidden rounded-[4px] border border-[var(--antd-border)] bg-[#1c1e23] text-sm"
+      className={`antd-popover-shadow absolute right-1 z-50 w-[234px] overflow-hidden rounded-[4px] border border-[var(--antd-border)] bg-[#1c1e23] text-sm ${
+        fullscreen ? 'top-[44px]' : '-top-[35px]'
+      }`}
       role="dialog"
     >
       <div className="flex h-[30px] items-center gap-2 px-3">
@@ -372,6 +377,7 @@ export function TablePanel({
           <ColumnSettingPanel
             allKeys={allKeys}
             draftHidden={draftHidden}
+            fullscreen={fullscreen}
             onApply={() => {
               setHidden(draftHidden);
               setSettingOpen(false);
