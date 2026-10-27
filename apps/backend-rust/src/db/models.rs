@@ -15,6 +15,15 @@ pub struct SystemUser {
     pub home_path: String,
     /// 1 启用 0 禁用
     pub status: i64,
+    pub dept_id: i64,
+    pub email: String,
+    pub phone: String,
+    /// 令牌版本：+1 即让该用户所有已签发 accessToken 立即失效
+    pub token_version: i64,
+    pub password_updated_at: String,
+    pub last_login_at: String,
+    pub last_login_ip: String,
+    pub created_at: String,
 }
 
 /// 用户信息（对外返回，与官方 UserInfo 对齐，不含密码）
@@ -28,6 +37,15 @@ pub struct UserInfo {
     pub username: String,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub home_path: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub avatar: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub email: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub phone: String,
+    /// 按钮级权限码（官方 /user/info 的 accessCodes；前端据此控制按钮可见性）
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub access_codes: Vec<String>,
 }
 
 /// 登录响应数据（官方 login.post.ts 返回 `{ ...user, accessToken }`，前端仅取 accessToken；
@@ -107,4 +125,75 @@ pub struct MenuRecord {
     pub path: String,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub redirect: String,
+}
+
+/* ===================== 系统管理（后台 CRUD）行模型 ===================== */
+
+/// 部门
+#[derive(Debug, Clone, FromRow)]
+pub struct SystemDept {
+    pub id: i64,
+    pub pid: i64,
+    pub name: String,
+    pub leader: String,
+    pub sort: i64,
+    pub status: i64,
+    pub remark: String,
+    pub created_at: String,
+}
+
+/// 字典项
+#[derive(Debug, Clone, FromRow)]
+pub struct SystemDict {
+    pub id: i64,
+    pub r#type: String,
+    pub dict_code: String,
+    pub name: String,
+    pub code: String,
+    pub value: String,
+    pub sort: i64,
+    pub status: i64,
+    pub remark: String,
+    pub created_at: String,
+}
+
+/// 审计日志行
+#[derive(Debug, Clone, FromRow, Serialize)]
+pub struct AuditLogRow {
+    pub id: i64,
+    pub ts: String,
+    pub user_id: i64,
+    pub username: String,
+    pub action: String,
+    pub resource: String,
+    pub resource_id: String,
+    pub method: String,
+    pub path: String,
+    pub ip: String,
+    pub user_agent: String,
+    pub status: i64,
+    pub success: i64,
+    pub detail: String,
+}
+
+/// 刷新令牌行
+#[derive(Debug, Clone, FromRow)]
+pub struct RefreshTokenRow {
+    pub selector: String,
+    pub verifier: String,
+    pub user_id: i64,
+    pub issued_at: String,
+    pub expires_at: String,
+    pub revoked_at: Option<String>,
+    pub replaced_by: Option<String>,
+}
+
+/// 登录失败计数行
+#[derive(Debug, Clone, FromRow)]
+pub struct LoginAttemptRow {
+    pub scope: String,
+    pub subject: String,
+    pub fail_count: i64,
+    pub window_started: String,
+    pub locked_until: Option<String>,
 }

@@ -1,4 +1,4 @@
-//! 应用状态 —— 全局共享的数据库连接池与 JWT 服务
+//! 应用状态 —— 全局共享的数据库连接池、JWT 服务与限流器
 
 use std::sync::Arc;
 
@@ -6,6 +6,7 @@ use sqlx::SqlitePool;
 
 use crate::auth::JwtService;
 use crate::config::AppConfig;
+use crate::security::RateLimiter;
 
 /// 应用全局状态
 #[derive(Clone)]
@@ -19,10 +20,22 @@ pub struct AppState {
     pub jwt: Arc<JwtService>,
     /// 应用配置
     pub config: Arc<AppConfig>,
+    /// 进程内限流器（认证类接口的爆破防护）
+    pub limiter: Arc<RateLimiter>,
 }
 
 impl AppState {
-    pub fn new(pool: SqlitePool, jwt: Arc<JwtService>, config: Arc<AppConfig>) -> Self {
-        Self { config, jwt, pool }
+    pub fn new(
+        pool: SqlitePool,
+        jwt: Arc<JwtService>,
+        config: Arc<AppConfig>,
+        limiter: Arc<RateLimiter>,
+    ) -> Self {
+        Self {
+            config,
+            jwt,
+            limiter,
+            pool,
+        }
     }
 }

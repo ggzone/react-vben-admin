@@ -8,7 +8,15 @@ license = "MIT"
 [dependencies]
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
-tower-http = { version = "0.6", features = ["cors", "fs", "trace"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = [
+  "cors",
+  "fs",
+  "trace",
+  "limit",
+  "set-header",
+  "timeout",
+] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = { version = "0.8", default-features = false, features = [
@@ -20,7 +28,10 @@ sqlx = { version = "0.8", default-features = false, features = [
 ] }
 jsonwebtoken = "9"
 argon2 = "0.5"
+# argon2 内部依赖 rand_core 0.6，需显式开启 getrandom 才能拿到 OsRng
+rand_core = { version = "0.6", features = ["getrandom"] }
 dotenvy = "0.15"
+anyhow = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 thiserror = "2"

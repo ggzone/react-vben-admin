@@ -42,6 +42,16 @@ impl AppError {
         Self::new(StatusCode::NOT_FOUND, message)
     }
 
+    /// 409 冲突（用户名/角色名重复等）
+    pub fn conflict(message: impl Into<String>) -> Self {
+        Self::new(StatusCode::CONFLICT, message)
+    }
+
+    /// 429 请求过于频繁
+    pub fn too_many_requests(message: impl Into<String>) -> Self {
+        Self::new(StatusCode::TOO_MANY_REQUESTS, message)
+    }
+
     /// 500 内部错误
     pub fn internal(message: impl Into<String>) -> Self {
         Self::new(StatusCode::INTERNAL_SERVER_ERROR, message)

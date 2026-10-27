@@ -32,137 +32,125 @@ pub fn verify_password(password: &str, password_hash: &str) -> Result<bool, AppE
 
 /// 菜单种子节点
 struct MenuSeed {
-    name: &'static str,
-    path: &'static str,
-    component: &'static str,
-    icon: &'static str,
+    name: String,
+    path: String,
+    component: String,
+    icon: String,
     sort: i64,
     /// catalog / menu / button
-    menu_type: &'static str,
-    auth_code: &'static str,
+    menu_type: String,
+    auth_code: String,
     /// meta JSON 字符串（camelCase，与前端 MenuRecordRaw.meta 对齐）
-    meta: &'static str,
+    meta: String,
     children: Vec<MenuSeed>,
 }
 
 /// 官方 mock 的 Dashboard 菜单树
 fn dashboard_menus() -> MenuSeed {
     MenuSeed {
+        auth_code: String::new(),
         children: vec![
             MenuSeed {
-                auth_code: "",
+                auth_code: String::new(),
                 children: vec![],
-                component: "/dashboard/analytics/index",
-                icon: "",
-                meta: r#"{"affixTab": true, "title": "page.dashboard.analytics"}"#,
-                menu_type: "menu",
-                name: "Analytics",
-                path: "/analytics",
+                component: "/dashboard/analytics/index".into(),
+                icon: String::new(),
+                meta: r#"{"affixTab": true, "title": "page.dashboard.analytics"}"#.into(),
+                menu_type: "menu".into(),
+                name: "Analytics".into(),
+                path: "/analytics".into(),
                 sort: 1,
             },
             MenuSeed {
-                auth_code: "",
+                auth_code: String::new(),
                 children: vec![],
-                component: "/dashboard/workspace/index",
-                icon: "",
-                meta: r#"{"title": "page.dashboard.workspace"}"#,
-                menu_type: "menu",
-                name: "Workspace",
-                path: "/workspace",
+                component: "/dashboard/workspace/index".into(),
+                icon: String::new(),
+                meta: r#"{"title": "page.dashboard.workspace"}"#.into(),
+                menu_type: "menu".into(),
+                name: "Workspace".into(),
+                path: "/workspace".into(),
                 sort: 2,
             },
         ],
-        component: "",
-        icon: "",
-        meta: r#"{"order": -1, "title": "page.dashboard.title"}"#,
-        menu_type: "catalog",
-        name: "Dashboard",
-        path: "/dashboard",
+        component: String::new(),
+        icon: String::new(),
+        meta: r#"{"order": -1, "title": "page.dashboard.title"}"#.into(),
+        menu_type: "catalog".into(),
+        name: "Dashboard".into(),
+        path: "/dashboard".into(),
         sort: -1,
     }
 }
 
 /// 官方 mock 的 Demos 菜单树（按角色注入对应可见性节点）
 fn demos_menus(role: &str) -> MenuSeed {
-    let role_node = MenuSeed {
-        auth_code: "",
-        children: vec![],
-        component: &format!("/demos/access/{role}-visible").replace("{role}", role),
-        icon: "mdi:button-cursor",
-        meta: &format!(r#"{{"title": "demos.access.{role}Visible"}}"#),
-        menu_type: "menu",
-        name: &format!("Access{}VisibleDemo", capitalize(role)),
-        path: &format!("/demos/access/{role}-visible"),
-        sort: 4,
-    };
-    let _ = &role_node;
-
     MenuSeed {
-        auth_code: "",
+        auth_code: String::new(),
         children: vec![
             MenuSeed {
-                auth_code: "",
+                auth_code: String::new(),
                 children: vec![
                     MenuSeed {
-                        auth_code: "",
+                        auth_code: String::new(),
                         children: vec![],
-                        component: "/demos/access/index",
-                        icon: "mdi:page-previous-outline",
-                        meta: r#"{"title": "demos.access.pageAccess"}"#,
-                        menu_type: "menu",
-                        name: "AccessPageControlDemo",
-                        path: "/demos/access/page-control",
+                        component: "/demos/access/index".into(),
+                        icon: "mdi:page-previous-outline".into(),
+                        meta: r#"{"title": "demos.access.pageAccess"}"#.into(),
+                        menu_type: "menu".into(),
+                        name: "AccessPageControlDemo".into(),
+                        path: "/demos/access/page-control".into(),
                         sort: 1,
                     },
                     MenuSeed {
-                        auth_code: "",
+                        auth_code: String::new(),
                         children: vec![],
-                        component: "/demos/access/button-control",
-                        icon: "mdi:button-cursor",
-                        meta: r#"{"title": "demos.access.buttonControl"}"#,
-                        menu_type: "menu",
-                        name: "AccessButtonControlDemo",
-                        path: "/demos/access/button-control",
+                        component: "/demos/access/button-control".into(),
+                        icon: "mdi:button-cursor".into(),
+                        meta: r#"{"title": "demos.access.buttonControl"}"#.into(),
+                        menu_type: "menu".into(),
+                        name: "AccessButtonControlDemo".into(),
+                        path: "/demos/access/button-control".into(),
                         sort: 2,
                     },
                     MenuSeed {
-                        auth_code: "",
+                        auth_code: String::new(),
                         children: vec![],
-                        component: "/demos/access/menu-visible-403",
-                        icon: "mdi:button-cursor",
-                        meta: r#"{"authority": ["no-body"], "menuVisibleWithForbidden": true, "title": "demos.access.menuVisible403"}"#,
-                        menu_type: "menu",
-                        name: "AccessMenuVisible403Demo",
-                        path: "/demos/access/menu-visible-403",
+                        component: "/demos/access/menu-visible-403".into(),
+                        icon: "mdi:button-cursor".into(),
+                        meta: r#"{"authority": ["no-body"], "menuVisibleWithForbidden": true, "title": "demos.access.menuVisible403"}"#.into(),
+                        menu_type: "menu".into(),
+                        name: "AccessMenuVisible403Demo".into(),
+                        path: "/demos/access/menu-visible-403".into(),
                         sort: 3,
                     },
                     MenuSeed {
-                        auth_code: "",
+                        auth_code: String::new(),
                         children: vec![],
-                        component: &format!("/demos/access/{role}-visible"),
-                        icon: "mdi:button-cursor",
-                        meta: &format!(r#"{{"title": "demos.access.{role}Visible"}}"#),
-                        menu_type: "menu",
-                        name: &format!("Access{}VisibleDemo", capitalize(role)),
-                        path: &format!("/demos/access/{role}-visible"),
+                        component: format!("/demos/access/{role}-visible"),
+                        icon: "mdi:button-cursor".into(),
+                        meta: format!(r#"{{"title": "demos.access.{role}Visible"}}"#),
+                        menu_type: "menu".into(),
+                        name: format!("Access{}VisibleDemo", capitalize(role)),
+                        path: format!("/demos/access/{role}-visible"),
                         sort: 4,
                     },
                 ],
-                component: "",
-                icon: "mdi:cloud-key-outline",
-                meta: r#"{"title": "demos.access.backendPermissions"}"#,
-                menu_type: "catalog",
-                name: "AccessDemos",
-                path: "/demosaccess",
+                component: String::new(),
+                icon: "mdi:cloud-key-outline".into(),
+                meta: r#"{"title": "demos.access.backendPermissions"}"#.into(),
+                menu_type: "catalog".into(),
+                name: "AccessDemos".into(),
+                path: "/demosaccess".into(),
                 sort: 1,
             },
         ],
-        component: "",
-        icon: "ic:baseline-view-in-ar",
-        meta: r#"{"icon": "ic:baseline-view-in-ar", "keepAlive": true, "order": 1000, "title": "demos.title"}"#,
-        menu_type: "catalog",
-        name: "Demos",
-        path: "/demos",
+        component: String::new(),
+        icon: "ic:baseline-view-in-ar".into(),
+        meta: r#"{"icon": "ic:baseline-view-in-ar", "keepAlive": true, "order": 1000, "title": "demos.title"}"#.into(),
+        menu_type: "catalog".into(),
+        name: "Demos".into(),
+        path: "/demos".into(),
         sort: 1000,
     }
 }
@@ -183,14 +171,14 @@ async fn insert_menu(pool: &SqlitePool, menu: &MenuSeed) -> Result<i64, AppError
            VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING id"#,
     )
-    .bind(menu.name)
-    .bind(menu.path)
-    .bind(menu.component)
-    .bind(menu.icon)
+    .bind(&menu.name)
+    .bind(&menu.path)
+    .bind(&menu.component)
+    .bind(&menu.icon)
     .bind(menu.sort)
-    .bind(menu.menu_type)
-    .bind(menu.auth_code)
-    .bind(menu.meta)
+    .bind(&menu.menu_type)
+    .bind(&menu.auth_code)
+    .bind(&menu.meta)
     .fetch_one(pool)
     .await?;
 
@@ -202,14 +190,14 @@ async fn insert_menu(pool: &SqlitePool, menu: &MenuSeed) -> Result<i64, AppError
                RETURNING id"#,
         )
         .bind(id)
-        .bind(child.name)
-        .bind(child.path)
-        .bind(child.component)
-        .bind(child.icon)
+        .bind(&child.name)
+        .bind(&child.path)
+        .bind(&child.component)
+        .bind(&child.icon)
         .bind(child.sort)
-        .bind(child.menu_type)
-        .bind(child.auth_code)
-        .bind(child.meta)
+        .bind(&child.menu_type)
+        .bind(&child.auth_code)
+        .bind(&child.meta)
         .fetch_one(pool)
         .await?;
         insert_menu_children(pool, child_id, child).await?;
@@ -227,14 +215,14 @@ async fn insert_menu_children(pool: &SqlitePool, parent_id: i64, menu: &MenuSeed
                RETURNING id"#,
         )
         .bind(parent_id)
-        .bind(child.name)
-        .bind(child.path)
-        .bind(child.component)
-        .bind(child.icon)
+        .bind(&child.name)
+        .bind(&child.path)
+        .bind(&child.component)
+        .bind(&child.icon)
         .bind(child.sort)
-        .bind(child.menu_type)
-        .bind(child.auth_code)
-        .bind(child.meta)
+        .bind(&child.menu_type)
+        .bind(&child.auth_code)
+        .bind(&child.meta)
         .fetch_one(pool)
         .await?;
         Box::pin(insert_menu_children(pool, child_id, child)).await?;
@@ -296,8 +284,9 @@ pub async fn seed(pool: &SqlitePool) -> Result<(), AppError> {
     .fetch_one(pool)
     .await?;
 
-    // ---- 用户（密码统一 123456，argon2 哈希）----
-    let password_hash = hash_password("123456")?;
+    // ---- 用户（密码取自 SEED_PASSWORD，默认与官方 mock 一致的 123456）----
+    let seed_password = std::env::var("SEED_PASSWORD").unwrap_or_else(|_| "123456".to_string());
+    let password_hash = hash_password(&seed_password)?;
     let users = [
         (0_i64, "vben", "Vben", "", super_role_id),
         (1, "admin", "Admin", "/workspace", admin_role_id),

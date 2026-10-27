@@ -12,6 +12,8 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::Serialize;
 
+use crate::error::AppError;
+
 /// 统一响应体
 #[derive(Debug, Serialize)]
 pub struct R<T> {
@@ -65,5 +67,65 @@ pub type REmpty = R<()>;
 impl REmpty {
     pub fn null() -> Self {
         Self::ok_empty()
+    }
+}
+
+/// 分页响应体 —— 与官方 `usePageResponseSuccess` 完全一致：`{ items, total }`
+#[derive(Debug, Serialize)]
+pub struct Page<T> {
+    pub items: Vec<T>,
+    pub total: i64,
+}
+
+impl<T> Page<T> {
+    pub fn new(items: Vec<T>, total: i64) -> Self {
+        Self { items, total }
+    }
+}
+
+/// 分页参数（带安全上限，防止 `pageSize=999999` 拖垮数据库）
+#[derive(Debug, serde::Deserialize)]
+pub struct PageQuery {
+    #[serde(default)]
+    pub page: Option<i64>,
+    #[serde(default, rename = "pageSize")]
+    pub page_size: Option<i64>,
+}
+
+/// 每页最大条数
+pub const MAX_PAGE_SIZE: i64 = 100;
+
+impl PageQuery {
+    /// 归一化后的 (limit, offset)
+    pub fn normalize(&self) -> (i64, i64) {
+        let page = self.page.unwrap_or(1).max(1);
+        let size = self.page_size.unwrap_or(20).clamp(1, MAX_PAGE_SIZE);
+        (size, (page - 1) * size)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn page_query_clamps_size_and_offsets() {
+        let q = PageQuery {
+            page: None,
+            page_size: None,
+        };
+        assert_eq!(q.normalize(), (20, 0));
+
+        let q = PageQuery {
+            page: Some(0),
+            page_size: Some(0),
+        };
+        assert_eq!(q.normalize(), (1, 0));
+
+        let q = PageQuery {
+            page: Some(3),
+            page_size: Some(1_000_000),
+        };
+        assert_eq!(q.normalize(), (MAX_PAGE_SIZE, 2 * MAX_PAGE_SIZE));
     }
 }
