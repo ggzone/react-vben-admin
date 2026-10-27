@@ -63,3 +63,8 @@ datalog
 # 本地探针脚本与截图（不入库）
 .tmp/
 shot/
+
+# backend-rust 本地产物与敏感文件
+apps/backend-rust/target/
+apps/backend-rust/data/
+apps/backend-rust/.env
