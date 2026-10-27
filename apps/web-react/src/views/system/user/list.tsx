@@ -205,14 +205,22 @@ function DeptTree({
 
   return (
     <div className="flex w-[208px] shrink-0 flex-col rounded-[10px] bg-[var(--antd-card-bg)] p-6">
-      <div className="relative">
+      {/* 官方 antd InputSearch：input（127）+ 32px 搜索按钮（带 1px 分隔线） */}
+      <div className="flex h-8 items-center overflow-hidden rounded-lg border border-[var(--antd-border)] bg-transparent focus-within:border-[var(--antd-primary)]">
         <input
-          className={QUERY_INPUT}
+          className="h-full min-w-0 flex-1 bg-transparent px-[11px] text-sm text-[var(--antd-text)] outline-none placeholder:text-[rgba(242,242,242,0.3)]"
           placeholder={$t('system.user.placeholder')}
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
-        <Search className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-[rgba(242,242,242,0.4)]" />
+        <button
+          aria-label="search-dept"
+          className="flex h-full w-8 shrink-0 cursor-pointer items-center justify-center border-l border-[var(--antd-border)] text-[rgba(242,242,242,0.45)] hover:text-[var(--antd-primary)]"
+          type="button"
+          onClick={() => setKeyword((v) => v)}
+        >
+          <Search className="size-3.5" />
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto" role="tree">
         {/* 顶部折叠/展开全部（官方 Tree 在 treeData 非空时渲染的 all 行） */}

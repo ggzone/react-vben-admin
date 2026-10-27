@@ -394,7 +394,9 @@ export function TablePanel({
           />
         )}
       </div>
-      <div className="min-h-0 flex-1 overflow-auto">
+      {/* flex 列 + 单一滚动容器：表头 sticky 吸顶、分页 sticky 吸底（对齐官方 vxe-grid 的
+          固定表头 + 底部 pager），内容不满一屏时分页由 mt-auto 压到底部 */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto">
         {children(filterColumns)}
       </div>
     </div>
@@ -426,13 +428,13 @@ export function DataTable({
   const alignClass = (a?: string) =>
     a === 'left' ? 'text-left' : a === 'right' ? 'text-right' : 'text-center';
   return (
-    <div className="overflow-x-auto">
+    <div className="w-full">
       <table className="w-full table-fixed border-collapse text-sm text-[var(--antd-text)]">
         <thead>
           <tr>
             {columns.map((col, i) => (
               <th
-                className={`overflow-hidden border-b border-[var(--antd-border)] bg-[#2e3033] px-4 font-normal text-[rgba(242,242,242,0.65)] whitespace-nowrap ${alignClass(col.align)}`}
+                className={`sticky top-0 z-[1] overflow-hidden border-b border-[var(--antd-border)] bg-[#2e3033] px-4 font-normal text-[rgba(242,242,242,0.65)] whitespace-nowrap ${alignClass(col.align)}`}
                 key={i}
                 style={{
                   ...({ height: 40 } as React.CSSProperties),
@@ -497,13 +499,21 @@ export function Pagination({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const pages: number[] = [];
   for (let p = 1; p <= totalPages; p++) pages.push(p);
-  const visible = pages.filter(
-    (p) => p <= 2 || p > totalPages - 2 || Math.abs(p - current) <= 1,
-  );
-  const pageBtn =
-    'flex size-8 cursor-pointer items-center justify-center rounded-lg border border-[var(--antd-border)] bg-[var(--antd-card-bg)] text-sm text-[var(--antd-text)] transition-colors';
+  const visible =
+    totalPages <= 7
+      ? pages
+      : pages.filter(
+          (p) => p <= 2 || p > totalPages - 2 || Math.abs(p - current) <= 1,
+        );
+  // 当前页与普通页分成两套类名：同类工具类并存时由 CSS 顺序决定胜负，
+  // 追加式写法（bg-[var(--antd-card-bg)] + bg-[#006be6]）会互相覆盖，
+  // 因此这里不再「基础类 + 高亮类」拼字符串，而是二选一。
+  const pageBtnBase =
+    'flex size-8 cursor-pointer items-center justify-center rounded-lg border text-sm transition-colors';
+  const pageBtn = `${pageBtnBase} border-[var(--antd-border)] bg-[var(--antd-card-bg)] text-[var(--antd-text)]`;
+  const pageBtnActive = `${pageBtnBase} border-[#006be6] bg-[#006be6] text-white`;
   return (
-    <div className="flex items-center justify-between px-2 py-4 text-sm text-[var(--antd-text)]">
+    <div className="sticky bottom-0 z-[2] mt-auto flex items-center justify-between bg-[var(--antd-card-bg)] px-2 py-1.5 text-sm text-[var(--antd-text)]">
       <div className="flex items-center gap-2">
         <span>共 {total} 条记录</span>
         <select
@@ -541,7 +551,7 @@ export function Pagination({
               <span className="px-1 text-[var(--antd-text)]">…</span>
             )}
             <button
-              className={`${pageBtn} ${p === current ? 'border-[var(--antd-primary)] text-[var(--antd-primary)]' : ''}`}
+              className={p === current ? pageBtnActive : pageBtn}
               type="button"
               onClick={() => onChange(p)}
             >
@@ -590,7 +600,7 @@ export function QueryItem({
 }
 
 export const QUERY_INPUT =
-  'h-8 w-full rounded-lg border border-[var(--antd-border)] bg-transparent px-[11px] py-1 text-sm leading-[22px] text-[var(--antd-text)] outline-none placeholder:text-[rgba(242,242,242,0.3)]';
+  'h-8 w-full rounded-lg border border-[var(--antd-border)] bg-transparent px-[11px] py-1 text-sm leading-[22px] text-[var(--antd-text)] outline-none placeholder:text-[rgba(242,242,242,0.3)] focus:border-[var(--antd-primary)]';
 
 export function QueryActions({
   collapsed = false,
