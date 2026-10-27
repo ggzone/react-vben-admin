@@ -95,7 +95,12 @@ class RequestClient {
     }
 
     // 401 刷新 token 重试逻辑（对齐官方 authenticateResponseInterceptor）
-    if (response.status === 401) {
+    // 例外：refresh 接口自身不参与刷新重试 —— 官方 refreshTokenApi 走未挂该拦截器的
+    // baseRequestClient，而这里 401 处理写在 RequestClient.request() 内部、对所有实例生效。
+    // 若不放行，refresh 的 401 会再次进入 handleUnauthorized，命中 isRefreshing 分支后
+    // 把请求挂进队列永久等待，外层 await 永不返回（登录态失效时表现为白屏卡死）。
+    const isRefreshRequest = requestConfig.url.includes('/auth/refresh');
+    if (response.status === 401 && !isRefreshRequest) {
       const retried = await this.handleUnauthorized(
         requestConfig,
         headers,
@@ -178,6 +183,16 @@ class RequestClient {
     } catch (refreshError) {
       this.refreshTokenQueue.forEach((cb) => cb(''));
       this.refreshTokenQueue = [];
+
+      // 对齐官方 authenticateResponseInterceptor 的 doReAuthenticate：
+      // refresh 失败即认定凭证已失效，必须清空本地 token。
+      // 不清理会形成死循环：AuthGuard 见 token 非空 → 拉 user/info 又 401 → 跳登录页，
+      // 而登录页外层的 LoggedInRedirect 见 token 仍在 → 又弹回受保护路由，
+      // 最终页面白屏卡死、既进不去也到不了登录页。
+      accessStore.setAccessToken(null);
+      accessStore.setIsAccessChecked(false);
+      accessStore.setAccessCodes([]);
+
       console.error('Refresh token failed, please login again.');
       throw refreshError;
     } finally {

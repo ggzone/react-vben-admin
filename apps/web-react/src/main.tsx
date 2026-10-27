@@ -51,10 +51,23 @@ async function initApplication() {
     </StrictMode>,
   );
 
-  // 移除全局 loading（对齐官方 unmountGlobalLoading）
-  const loading = document.querySelector('.app-loading');
-  if (loading) {
-    loading.remove();
+  // 移除全局 loading（对齐官方 @vben/utils unmountGlobalLoading：
+  // 先加 .hidden 触发淡出过渡，transitionend 后再移除节点与注入的 style，避免生硬闪烁）
+  const loadingElement =
+    document.querySelector<HTMLElement>('#__app-loading__');
+  if (loadingElement) {
+    loadingElement.classList.add('hidden');
+    const injectLoadingElements = document.querySelectorAll(
+      '[data-app-loading^="inject"]',
+    );
+    loadingElement.addEventListener(
+      'transitionend',
+      () => {
+        loadingElement.remove();
+        injectLoadingElements.forEach((el) => el.remove());
+      },
+      { once: true },
+    );
   }
 }
 

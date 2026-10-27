@@ -8,6 +8,7 @@
 import { create } from 'zustand';
 
 import { createStack, Stack } from '#/lib/stack';
+import { startProgress, stopProgress } from '#/lib/progress';
 import { usePreferencesStore } from '#/preferences/store';
 import { openWindow } from '#/lib/utils';
 
@@ -121,6 +122,8 @@ interface TabbarState {
   visitHistory: Stack<string>;
   /** 更新时间 */
   updateTime: number;
+  /** 是否渲染路由视图 —— 对齐官方 renderRouteView：置 false 一帧再置 true 即等于刷新当前页 */
+  renderRouteView: boolean;
 
   addTab: (routeTab: TabDefinition) => TabDefinition;
   closeTab: (tab: TabDefinition) => Promise<void>;
@@ -426,13 +429,14 @@ export const useTabbarStore = create<TabbarState>()((set, get) => {
     },
 
     refresh: async () => {
-      const currentPath = getCurrentPath ? getCurrentPath() : '';
-      // 通过 key 变化触发页面重渲染（React 适配：刷新当前路由）
-      set({ updateTime: Date.now() });
-      // 短暂延迟后再次更新，确保触发重渲染
+      // 对齐官方 tabbarStore.refresh：
+      // renderRouteView=false → 页面组件卸载 → 一帧/200ms 后置 true 重新挂载（= 刷新当前页）
+      // 期间显示顶部进度条（官方 startProgress/stopProgress）
+      set({ renderRouteView: false, updateTime: Date.now() });
+      startProgress();
       await new Promise((resolve) => setTimeout(resolve, 200));
-      set({ updateTime: Date.now() });
-      void currentPath;
+      set({ renderRouteView: true, updateTime: Date.now() });
+      stopProgress();
     },
 
     refreshByName: async (_name: string) => {
@@ -486,6 +490,7 @@ export const useTabbarStore = create<TabbarState>()((set, get) => {
     },
 
     updateTime: initial.visitHistory ? Date.now() : Date.now(),
+    renderRouteView: true,
     visitHistory: initial.visitHistory,
   };
 

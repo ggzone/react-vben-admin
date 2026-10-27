@@ -854,6 +854,37 @@ html body[data-scroll-locked] ._scroll__fixed_ {
   --menu-submenu-active-background-color: transparent;
 }
 
+/* 折叠态弹层容器同样承载主题变量（官方 `.vben-menu__popup-container.is-dark` 由嵌套生成） */
+.vben-menu__popup-container.is-dark {
+  --menu-background-color: hsl(var(--menu));
+  --menu-item-color: hsl(var(--foreground) / 80%);
+  --menu-item-background-color: var(--menu-background-color);
+  --menu-item-hover-color: hsl(var(--accent-foreground));
+  --menu-item-hover-background-color: hsl(var(--accent));
+  --menu-item-active-color: hsl(var(--accent-foreground));
+  --menu-item-active-background-color: hsl(var(--accent));
+  --menu-submenu-background-color: var(--menu-background-color);
+  --menu-submenu-hover-color: hsl(var(--accent-foreground));
+  --menu-submenu-hover-background-color: hsl(var(--accent));
+  --menu-submenu-active-color: hsl(var(--accent-foreground));
+  --menu-submenu-active-background-color: transparent;
+}
+
+.vben-menu__popup-container.is-light {
+  --menu-background-color: hsl(var(--menu));
+  --menu-item-color: hsl(var(--accent-foreground));
+  --menu-item-background-color: var(--menu-background-color);
+  --menu-item-hover-color: var(--menu-item-color);
+  --menu-item-hover-background-color: hsl(var(--accent));
+  --menu-item-active-color: hsl(var(--primary));
+  --menu-item-active-background-color: hsl(var(--primary) / 15%);
+  --menu-submenu-background-color: var(--menu-background-color);
+  --menu-submenu-hover-color: hsl(var(--primary));
+  --menu-submenu-hover-background-color: hsl(var(--accent));
+  --menu-submenu-active-color: hsl(var(--primary));
+  --menu-submenu-active-background-color: transparent;
+}
+
 .vben-menu.is-rounded {
   --menu-item-margin-x: 8px;
   --menu-item-collapse-margin-x: 6px;
@@ -920,6 +951,42 @@ html body[data-scroll-locked] ._scroll__fixed_ {
       background: var(--menu-item-active-background-color) !important;
       border-radius: var(--menu-item-radius);
     }
+  }
+
+  &.is-light {
+    .vben-sub-menu-content,
+    .vben-menu-item {
+      &.is-active {
+        background: var(--menu-item-active-background-color) !important;
+      }
+    }
+  }
+
+  &.is-rounded {
+    .vben-sub-menu-content,
+    .vben-menu-item {
+      &.is-collapse-show-title {
+        margin: 4px 8px !important;
+      }
+    }
+  }
+}
+
+/* 折叠态弹层容器（对齐官方 menu.vue 的 &__popup-container / &__popup） */
+.vben-menu__popup-container {
+  max-width: 240px;
+  height: unset;
+  padding: 0;
+  background: var(--menu-background-color);
+}
+
+.vben-menu__popup {
+  padding: 10px 0;
+  border-radius: var(--menu-item-radius);
+
+  .vben-sub-menu-content,
+  .vben-menu-item {
+    padding: var(--menu-item-popup-padding-y) var(--menu-item-popup-padding-x);
   }
 }
 
@@ -1074,6 +1141,44 @@ html body[data-scroll-locked] ._scroll__fixed_ {
   fill: var(--menu-submenu-active-color);
 }
 
+/* 折叠态：弹层触发器（div[data-state='open']）下的内容同样取激活色（官方同款选择器） */
+.vben-sub-menu.is-active div[data-state='open'] > .vben-sub-menu-content {
+  color: var(--menu-submenu-active-color);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--menu-submenu-active-background-color);
+  fill: var(--menu-submenu-active-color);
+}
+
+/* 折叠态显示标题（collapseShowTitle）：图标放大 + 名称置底（官方 menu-item / sub-menu-content） */
+.vben-menu-item.is-collapse-show-title,
+.vben-sub-menu-content.is-collapse-show-title {
+  flex-direction: column;
+  padding: 32px 0 !important;
+
+  .vben-menu-tooltip__trigger {
+    flex-direction: column;
+  }
+
+  .vben-menu__icon {
+    display: block;
+    font-size: calc(var(--font-size-base, 16px) * 1.25) !important;
+    transition: all 0.25s ease;
+  }
+
+  .vben-menu__name,
+  .vben-sub-menu-content__title {
+    display: inline-flex;
+    flex-shrink: 0;
+    margin-top: 8px;
+    margin-bottom: 0;
+    font-size: calc(var(--font-size-base, 16px) * 0.75);
+    font-weight: 400;
+    line-height: normal;
+    transition: all 0.25s ease;
+  }
+}
+
 /* 折叠态下的子菜单内容 */
 .vben-menu.is-collapse .vben-sub-menu-content,
 .vben-menu.is-collapse .vben-menu-item {
@@ -1112,4 +1217,247 @@ html body[data-scroll-locked] ._scroll__fixed_ {
   --antd-tag-border: rgb(235 235 252 / 23%);
   --antd-shadow: 0 2px 0 0 rgb(242 242 242 / 4%);
   --antd-shadow-primary: 0 2px 0 0 rgb(106 163 250 / 16%);
+}
+
+/* ===== 页面切换动画 =====
+   来源：packages/@core/base/design/src/css/transition.css（官方逐条移植，类名与时长一致）。
+   Vue 侧由 content.vue 的 <Transition :name="transitionName" appear mode="out-in"> 驱动；
+   React 侧由 components/layout/page-transition.tsx 按同样的 enter-from / enter-active /
+   leave-active / leave-to 四态时序套用。 */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: 0.25s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.slide-up-move {
+  transition: transform 0.3s;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: 0.25s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.slide-down-move {
+  transition: transform 0.3s;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: 0.25s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.slide-left-move {
+  transition: transform 0.3s;
+}
+
+.slide-left-enter-from,
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translate(-15px);
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: 0.25s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.slide-right-move {
+  transition: transform 0.3s;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translate(15px);
+}
+
+.fade-transition-enter-active,
+.fade-transition-leave-active {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.fade-transition-enter-from,
+.fade-transition-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-slide-leave-active,
+.fade-slide-enter-active {
+  transition: all 0.3s;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translate(-30px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translate(30px);
+}
+
+.fade-down-enter-active,
+.fade-down-leave-active {
+  transition:
+    opacity 0.25s,
+    transform 0.3s;
+}
+
+.fade-down-enter-from {
+  opacity: 0;
+  transform: translateY(-10%);
+}
+
+.fade-down-leave-to {
+  opacity: 0;
+  transform: translateY(10%);
+}
+
+.fade-scale-leave-active,
+.fade-scale-enter-active {
+  transition: all 0.28s;
+}
+
+.fade-scale-enter-from {
+  opacity: 0;
+  transform: scale(1.2);
+}
+
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition:
+    opacity 0.2s,
+    transform 0.25s;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10%);
+}
+
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(-10%);
+}
+
+@keyframes fade-slide {
+  0% {
+    opacity: 0;
+    transform: translate(-30px);
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(30px);
+  }
+}
+
+@keyframes fade {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10%);
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-10%);
+  }
+}
+
+@keyframes fade-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-10%);
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(10%);
+  }
+}
+
+/* 偏好面板里四个动画预览块的循环演示（官方同名类） */
+.fade-slow {
+  animation: fade 3s infinite;
+}
+
+.fade-slide-slow {
+  animation: fade-slide 3s infinite;
+}
+
+.fade-up-slow {
+  animation: fade-up 3s infinite;
+}
+
+.fade-down-slow {
+  animation: fade-down 3s infinite;
+}
+
+.collapse-transition {
+  transition:
+    0.2s height ease-in-out,
+    0.2s padding-top ease-in-out,
+    0.2s padding-bottom ease-in-out;
+}
+
+.collapse-transition-leave-active,
+.collapse-transition-enter-active {
+  transition:
+    0.2s max-height ease-in-out,
+    0.2s padding-top ease-in-out,
+    0.2s margin-top ease-in-out;
 }

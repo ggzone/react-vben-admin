@@ -74,13 +74,17 @@ export function AdminLayout({
   const { isFullContent, isHeaderNav, isMixedNav, isSidebarMixedNav, layout } =
     useLayoutMode();
   const [expandOnHovering, setExpandOnHovering] = useState(false);
-  // 对齐官方 useScroll(document)：整页滚动 > 20px 时头部/标签栏才显示投影
-  const [windowScrolled, setWindowScrolled] = useState(false);
+  // 对齐官方 main 分支 vben-layout.vue：useScroll(contentRef)
+  // 滚动容器是内容区（不是 document），滚动 > 20px 时头部/标签栏才显示投影
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [contentScrolled, setContentScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setWindowScrolled(window.scrollY > 20);
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => setContentScrolled(el.scrollTop > 20);
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
   }, []);
 
   const {
@@ -170,8 +174,8 @@ export function AdminLayout({
     zIndex: appPref.zIndex,
   };
 
-  /** 内容区样式（对齐 contentStyle） */
-  const contentStyle: React.CSSProperties = {
+  /** 滚动容器样式（对齐官方 layoutScrollStyle）：fixed 头部时不占流，由滚动容器让出高度 */
+  const scrollStyle: React.CSSProperties = {
     marginTop:
       headerPref.mode !== 'static' && !isFullContent
         ? `${headerWrapperHeight}px`
@@ -197,7 +201,7 @@ export function AdminLayout({
   }, [headerWrapperHeight, mainWidth]);
 
   return (
-    <div className="relative flex min-h-full w-full">
+    <div className="relative flex h-full min-h-0 w-full overflow-hidden">
       {/* 侧边栏占位（对齐官方 layout-sidebar.vue 的 domVisible div）：fixed 的 aside 不占流，
           由这个同宽空 div 撑开主区域的起始位置 */}
       {sidebarEnableState && (
@@ -324,15 +328,16 @@ export function AdminLayout({
         </aside>
       )}
 
-      {/* 主区域（对齐官方 content 容器：flex-1；起始位置由上面的占位 div 决定） */}
-      <div className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in">
+      {/* 主区域（对齐官方 main 分支：relative flex min-h-0 flex-1 flex-col overflow-hidden；
+          起始位置由上面的占位 div 决定） */}
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden transition-all duration-300 ease-in">
         {/* 头部 + 标签栏（fixed 容器）；对齐官方 vben-layout.vue：滚动 > 20px 才有投影 */}
         <div
           className={cn(
             // 对齐官方 vben-layout.vue：SCROLL_FIXED_CLASS 标记，弹窗打开时补偿滚动条宽度
             SCROLL_FIXED_CLASS,
-            'overflow-hidden transition-all duration-200',
-            windowScrolled && 'shadow-[0_16px_24px_hsl(var(--background))]',
+            'shrink-0 overflow-hidden transition-all duration-200',
+            contentScrolled && 'shadow-[0_16px_24px_hsl(var(--background))]',
           )}
           style={headerWrapperStyle}
         >
@@ -385,18 +390,23 @@ export function AdminLayout({
           )}
         </div>
 
-        {/* 内容 —— 对齐官方 layout-content.vue：<main class="relative bg-background-deep">
-            官方 main 是 flex:1 的块级容器（无 flex 布局），内部由 relative h-full 的 div 包裹页面 */}
-        <main
-          ref={mainRef}
-          className="relative bg-background-deep transition-[margin-top] duration-200"
-          style={{ ...contentStyle, flex: 1 }}
+        {/* 滚动容器 —— 对齐官方 main 分支 vben-layout.vue 的 data-layout-region="scroll"：
+            整个 app 只有这里滚动（滚动条从标签栏下沿开始，不会盖到头部工具栏），
+            内容区 <main> 仍是 layout-content.vue 的 flex:1 块级容器 */}
+        <div
+          ref={scrollRef}
+          className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto bg-background-deep"
+          data-layout-region="scroll"
+          id="__vben_layout_scroll"
+          style={scrollStyle}
         >
-          {children}
-        </main>
+          <main ref={mainRef} className="relative flex-1 bg-background-deep">
+            {children}
+          </main>
 
-        {/* 页脚 */}
-        {footer && <div>{footer}</div>}
+          {/* 页脚 */}
+          {footer && <div>{footer}</div>}
+        </div>
       </div>
 
       {extra}

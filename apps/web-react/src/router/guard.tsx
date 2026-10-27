@@ -45,8 +45,9 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         const info = userInfo || (await fetchUserInfo());
         if (cancelled) return;
 
-        // frontend 模式：根据路由树（含分组层级）生成菜单（角色过滤预留）
-        const menus = generateMenus(allRoutes);
+        // frontend 模式：根据路由树（含分组层级）生成菜单，
+        // 并按后端 /user/info 下发的 accessCodes 过滤（authority 任一命中即可见）
+        const menus = generateMenus(allRoutes, {}, (info as any)?.accessCodes ?? []);
         setAccessMenus(menus);
         setIsAccessChecked(true);
       } catch {

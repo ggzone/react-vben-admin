@@ -14,6 +14,7 @@ import type { MenuRecordRaw } from '#/types/menu';
 export function generateMenus(
   routes: AppRoute[],
   pathMap: Record<string, string> = {},
+  codes: string[] = [],
 ): MenuRecordRaw[] {
   let menus = mapTree<AppRoute, MenuRecordRaw>(routes, (route) => {
     const path = pathMap[route.name] ?? route.path ?? '';
@@ -31,6 +32,7 @@ export function generateMenus(
       order,
       title = '',
       query,
+      authority,
     } = meta as any;
 
     // 确保菜单名称不为空
@@ -55,7 +57,12 @@ export function generateMenus(
       order,
       path: resultPath,
       query,
-      show: !meta.hideInMenu,
+      // authority 为「任一命中即可见」的权限码列表；未声明则对所有登录用户可见
+      show:
+        !meta.hideInMenu &&
+        (!Array.isArray(authority) ||
+          authority.length === 0 ||
+          authority.some((code: string) => codes.includes(code))),
     };
   });
 
@@ -63,5 +70,10 @@ export function generateMenus(
   menus = sortTree(menus, (a, b) => (a?.order ?? 999) - (b?.order ?? 999));
 
   // 过滤掉隐藏的菜单项
-  return filterTree(menus, (menu) => !!menu.show);
+  const visible = filterTree(menus, (menu) => !!menu.show);
+  // 目录节点若子项全部被权限过滤，则目录本身也不展示（避免出现空分组）
+  return filterTree(
+    visible,
+    (menu) => !(menu.children && menu.children.length === 0 && menu.path === '/system'),
+  );
 }

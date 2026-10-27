@@ -3,7 +3,7 @@
  * 装配：侧边栏（logo + 菜单）+ 头部（面包屑 / 全局搜索/偏好/主题/语言/时区/全屏/刷新/通知/锁屏/退出/用户下拉）+ 标签栏 + 内容
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   BookOpenText,
   CircleHelp,
@@ -15,6 +15,7 @@ import {
 
 import { AdminLayout } from '#/components/layout/admin-layout';
 import { VbenMenu } from '#/components/layout/menu';
+import { PageTransition } from '#/components/layout/page-transition';
 import { Logo } from '#/components/layout/logo';
 import {
   PreferencesDrawer,
@@ -245,12 +246,6 @@ export function BasicLayout() {
           <FullscreenButton className="mr-1" />,
           'fullscreen',
         )}
-      {w.refresh &&
-        withTip(
-          $t('preferences.widget.refresh'),
-          <RefreshButton className="my-0 mr-1 rounded-md" />,
-          'refresh',
-        )}
       {w.notification &&
         withTip(
           $t('preferences.widget.notification'),
@@ -316,6 +311,8 @@ export function BasicLayout() {
       footer={undefined}
       headerLeft={
         <>
+          {/* 对齐官方 header.vue 的 leftSlots：refresh 索引 0，排在面包屑之前、且不带 tooltip */}
+          {w.refresh && <RefreshButton className="my-0 mr-1 rounded-md" />}
           {preferences.breadcrumb.enable && (
             <div className="hidden lg:block">
               <Breadcrumb
@@ -376,9 +373,10 @@ export function BasicLayout() {
         </>
       }
     >
-      {/* 对齐官方 content/content.vue：<div class="relative h-full"> 包裹页面 */}
+      {/* 对齐官方 content/content.vue：<div class="relative h-full"> 包裹页面，
+          内层按 preferences.transition 驱动页面切换动画 */}
       <div className="relative h-full">
-        <Outlet />
+        <PageTransition />
       </div>
       {/* 锁屏遮罩（对齐官方 layout.vue 中的 <LockScreen v-if="isLocked" />） */}
       {isLocked && <LockScreen />}

@@ -168,7 +168,7 @@ export function PreferenceToggleItem({
         {items.map((item) => (
           <ToggleGroupItem
             key={item.value}
-            className="h-7 rounded-sm"
+            className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground h-7 rounded-sm"
             value={item.value}
           >
             {item.label}
@@ -691,7 +691,7 @@ export function PreferenceRadiusBlock() {
     >
       {items.map((item) => (
         <ToggleGroupItem
-          className="h-7 w-16 rounded-sm"
+          className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground h-7 w-16 rounded-sm"
           key={item.value}
           value={item.value}
         >

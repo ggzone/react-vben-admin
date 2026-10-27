@@ -5,36 +5,124 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vben Admin React</title>
-    <style>
-      /* 仿官方全局 loading（preferences 初始化前显示） */
-      .app-loading {
+    <!-- 全局 loading —— 1:1 移植官方 internal/vite-config 注入的 default-loading.html
+         （蓝方块跳动 + 阴影 + 标题；应用挂载后由 main.tsx 触发 .hidden 淡出再移除） -->
+    <style data-app-loading="inject-css">
+      html {
+        /* same as ant-design-vue/dist/reset.css setting, avoid the title line-height changed */
+        line-height: 1.15;
+      }
+
+      .loading {
         position: fixed;
-        inset: 0;
+        top: 0;
+        left: 0;
+        z-index: 9999;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: #070709;
-        z-index: 9999;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #f4f7f9;
       }
-      .app-loading .spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid hsl(var(--primary) / 30%);
-        border-top-color: hsl(var(--primary));
+
+      .loading.hidden {
+        visibility: hidden;
+        pointer-events: none;
+        opacity: 0;
+        transition: all 0.8s ease-out;
+      }
+
+      .dark .loading {
+        background: #0d0d10;
+      }
+
+      .title {
+        margin-top: 66px;
+        font-size: 28px;
+        font-weight: 600;
+        color: rgb(0 0 0 / 85%);
+      }
+
+      .dark .title {
+        color: #fff;
+      }
+
+      .loader {
+        position: relative;
+        width: 48px;
+        height: 48px;
+      }
+
+      .loader::before {
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 48px;
+        height: 5px;
+        content: '';
+        background: hsl(var(--primary, 210 100% 50%) / 50%);
         border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+        animation: shadow-ani 0.5s linear infinite;
       }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
+
+      .loader::after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        content: '';
+        background: hsl(var(--primary, 210 100% 50%));
+        border-radius: 4px;
+        animation: jump-ani 0.5s linear infinite;
+      }
+
+      @keyframes jump-ani {
+        15% {
+          border-bottom-right-radius: 3px;
+        }
+
+        25% {
+          transform: translateY(9px) rotate(22.5deg);
+        }
+
+        50% {
+          border-bottom-right-radius: 40px;
+          transform: translateY(18px) scale(1, 0.9) rotate(45deg);
+        }
+
+        75% {
+          transform: translateY(9px) rotate(67.5deg);
+        }
+
+        100% {
+          transform: translateY(0) rotate(90deg);
+        }
+      }
+
+      @keyframes shadow-ani {
+        0%,
+        100% {
+          transform: scale(1, 1);
+        }
+
+        50% {
+          transform: scale(1.2, 1);
         }
       }
     </style>
   </head>
   <body>
-    <div id="app">
-      <div class="app-loading"><div class="spinner"></div></div>
+    <!-- loading 放在 #app 之外：官方注释说明放在 app 标签内渲染过快会闪烁，
+         且 React createRoot 会清空 #app 子节点，无法做淡出 -->
+    <div class="loading" id="__app-loading__">
+      <div class="loader"></div>
+      <div class="title">%VITE_APP_TITLE%</div>
     </div>
+    <div id="app"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
