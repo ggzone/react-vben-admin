@@ -403,7 +403,10 @@ export function AdminLayout({
           {/* min-h-0：flex-1 的默认 min-height:auto 会被页面内容（如系统管理左侧树）撑高，
               导致内容区高度脱离视口、卡片/分页被推出可视范围。官方 main 因无滚动容器且内容
               未超视口而不触发，这里必须显式放开收缩 */}
-          <main ref={mainRef} className="relative min-h-0 flex-1 bg-background-deep">
+          <main
+            ref={mainRef}
+            className="relative min-h-0 flex-1 bg-background-deep"
+          >
             {children}
           </main>
 
