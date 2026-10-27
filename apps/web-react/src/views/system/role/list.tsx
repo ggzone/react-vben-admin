@@ -136,6 +136,7 @@ export default function SystemRole() {
         const toNodes = (nodes: SystemApi.MenuItem[]): CheckTreeNode[] =>
           nodes.map((n) => ({
             children: n.children?.length ? toNodes(n.children) : undefined,
+            icon: n.meta?.icon,
             label: $t(n.meta?.title ?? n.name),
             value: n.id,
           }));

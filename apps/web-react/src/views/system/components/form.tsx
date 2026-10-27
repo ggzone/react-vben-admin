@@ -15,6 +15,7 @@
  *   正文 rgba(242,242,242,.85)、占位 rgba(242,242,242,.25)。
  */
 import * as React from 'react';
+import { Icon } from '@iconify/react';
 import {
   Check,
   ChevronDown,
@@ -436,6 +437,8 @@ export function TextArea({
 
 export interface CheckTreeNode {
   children?: CheckTreeNode[];
+  /** 官方 Tree 的 `icon-field="meta.icon"`：节点图标（16px，紧跟复选框） */
+  icon?: string;
   label: string;
   value: string;
 }
@@ -616,7 +619,7 @@ export function CheckboxTree({
   const anyExpanded = expanded.size > 0;
 
   return (
-    <div className="list-none rounded-lg border border-[var(--antd-border)] bg-[var(--antd-input-bg)] text-sm font-medium select-none">
+    <div className="list-none rounded-lg border border-[var(--antd-border)] bg-[var(--antd-input-bg)] text-sm font-medium text-[var(--antd-text)] select-none">
       {/* 全选行（官方 bordered 形态的 header 区：chevron 切展开、checkbox 全选/清空） */}
       <div className="my-0.5 flex w-full items-center border-b border-[var(--antd-border)] p-1">
         <div className="flex size-5 flex-1 cursor-pointer items-center">
@@ -673,6 +676,9 @@ export function CheckboxTree({
                 className="flex w-full items-center gap-1 overflow-hidden"
                 title={node.label}
               >
+                {node.icon && (
+                  <Icon className="size-4 shrink-0" icon={node.icon} />
+                )}
                 {node.label}
               </div>
             </div>
