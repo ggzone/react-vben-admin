@@ -19,6 +19,17 @@ import { useUserStore } from '#/stores/user';
 import { allRoutes } from '#/router/dynamic-routes';
 import { generateMenus } from '#/router/access';
 
+/**
+ * 菜单生成口径版本号 —— 权限码来源、路由树结构或 generateMenus 过滤规则发生变化时递增。
+ *
+ * 背景：isAccessChecked 只存在内存里，长期打开的标签页经过 Vite 热更新后
+ * （模块已换成新代码，但 store 里 isAccessChecked 仍是旧值 true）不会重新执行
+ * generateAccess，于是侧边栏一直停留在旧结果上 —— 典型症状就是「系统管理菜单看不到」，
+ * 而新开一个标签页/硬刷新却正常。版本号不一致时强制作废一次旧菜单并重新生成。
+ */
+const MENUS_SCHEME_VERSION = '2';
+const MENUS_SCHEME_KEY = 'vben-access-menus-scheme';
+
 export function AuthGuard({ children }: { children: ReactNode }) {
   const location = useLocation();
   const accessToken = useAccessStore((state) => state.accessToken);
@@ -35,6 +46,16 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   );
 
   const [checkFailed, setCheckFailed] = useState(false);
+
+  // 旧口径菜单自愈：口径版本变了就作废内存里的旧菜单，让下面的 checkAccess 重跑
+  useEffect(() => {
+    if (typeof localStorage === 'undefined') return;
+    if (localStorage.getItem(MENUS_SCHEME_KEY) === MENUS_SCHEME_VERSION) return;
+    localStorage.setItem(MENUS_SCHEME_KEY, MENUS_SCHEME_VERSION);
+    if (!isAccessChecked) return;
+    setAccessMenus([]);
+    setIsAccessChecked(false);
+  }, [isAccessChecked, setAccessMenus, setIsAccessChecked]);
 
   // 未检查 → 拉取用户信息并生成菜单（对齐官方 generateAccess）
   // 注意：hooks 必须无条件执行，置于所有条件返回之前（否则 isAccessChecked 翻转时
