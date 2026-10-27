@@ -13,7 +13,7 @@
  * 不落 remark，因此表单不提供备注输入（避免“填了不生效”），查询区的备注查询保留。
  */
 import * as React from 'react';
-import { ChevronDown, ChevronRight, Plus, Search } from 'lucide-react';
+import { ChevronRight, Inbox, Plus, Search } from 'lucide-react';
 
 import {
   createUser,
@@ -44,26 +44,33 @@ import {
   QUERY_INPUT,
   StatusSwitch,
   SystemPage,
-  TableToolbar,
+  TablePanel,
   type TableColumn,
 } from '#/views/system/components/table-page';
 
 /* ---------------- 部门树 ---------------- */
 
+/**
+ * 树节点 —— 对齐官方 shadcn Tree（@core/ui-kit/shadcn-ui/src/ui/tree/tree.vue）：
+ * - 行：`my-0.5 p-1` + 文字 14/500/20 → 高 28、行距 30、圆角 4、无 hover 底色
+ * - 缩进：每层 margin-left 16px（官方 `margin-left: ${level-1}rem`）
+ * - 点击文字 = 只选中（官方 TreeItem @select → emits select）
+ * - 点击箭头 = 只展开/收起（官方 `@click.stop` 独立处理，不触发 select）
+ */
 function TreeItem({
   depth,
+  expandedIds,
   node,
   onSelect,
+  onToggleExpand,
   selectedId,
-  expandedIds,
-  toggleExpand,
 }: {
   depth: number;
   expandedIds: Set<string>;
   node: SystemApi.DeptItem;
   onSelect: (id: string) => void;
+  onToggleExpand: (id: string) => void;
   selectedId: string;
-  toggleExpand: (id: string) => void;
 }) {
   const hasChildren = !!node.children?.length;
   const expanded = expandedIds.has(node.id);
@@ -71,31 +78,35 @@ function TreeItem({
   return (
     <div>
       <div
-        className={`flex h-[30px] cursor-pointer items-center gap-1 rounded-md px-2 text-sm text-[var(--antd-text)] hover:bg-[rgba(255,255,255,0.06)] ${
-          selected ? 'bg-[rgba(3,94,199,0.25)]' : ''
+        aria-selected={selected}
+        className={`my-0.5 flex cursor-pointer items-center rounded p-1 text-sm leading-5 font-medium text-[var(--antd-text)] ${
+          selected ? 'bg-[#2e3033]' : ''
         }`}
-        style={{ paddingLeft: `${8 + depth * 16}px` }}
-        onClick={() => {
-          onSelect(node.id);
-          if (hasChildren) {
-            toggleExpand(node.id);
-          }
-        }}
+        role="treeitem"
+        style={{ marginLeft: `${depth * 16}px` }}
+        title={node.name}
+        onClick={() => onSelect(node.id)}
       >
         {hasChildren ? (
-          expanded ? (
-            <ChevronDown className="size-3.5 shrink-0 text-[rgba(242,242,242,0.6)]" />
-          ) : (
-            <ChevronRight className="size-3.5 shrink-0 text-[rgba(242,242,242,0.6)]" />
-          )
+          <ChevronRight
+            className={`text-foreground/80 size-4 shrink-0 transition-transform ${
+              expanded ? 'rotate-90' : ''
+            }`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleExpand(node.id);
+            }}
+          />
         ) : (
-          <span className="size-3.5 shrink-0" />
+          <div className="size-4 shrink-0" />
         )}
-        <span className="truncate">{node.name}</span>
+        <div className="flex min-w-0 items-center gap-1">
+          <span className="truncate">{node.name}</span>
+        </div>
       </div>
       {hasChildren && expanded && (
         <div>
-          {node.children!.map((child) => (
+          {node.children?.map((child) => (
             <TreeItem
               depth={depth + 1}
               expandedIds={expandedIds}
@@ -103,13 +114,27 @@ function TreeItem({
               node={child}
               selectedId={selectedId}
               onSelect={onSelect}
-              toggleExpand={toggleExpand}
+              onToggleExpand={onToggleExpand}
             />
           ))}
         </div>
       )}
     </div>
   );
+}
+
+/** 可展开节点的 id 集合（官方 expandAll 只取 hasChildren 的项） */
+function collectExpandable(
+  nodes: SystemApi.DeptItem[],
+  out: string[] = [],
+): string[] {
+  for (const node of nodes) {
+    if (node.children?.length) {
+      out.push(node.id);
+      collectExpandable(node.children, out);
+    }
+  }
+  return out;
 }
 
 function DeptTree({
@@ -154,6 +179,11 @@ function DeptTree({
     });
   };
 
+  const expandableIds = React.useMemo(() => collectExpandable(depts), [depts]);
+  const allExpanded =
+    expandableIds.length > 0 &&
+    expandableIds.every((id) => expandedIds.has(id));
+
   const filtered = React.useMemo(() => {
     if (!keyword.trim()) return depts;
     const kw = keyword.toLowerCase();
@@ -174,7 +204,7 @@ function DeptTree({
   }, [depts, keyword]);
 
   return (
-    <div className="flex w-[190px] shrink-0 flex-col rounded-[10px] bg-[var(--antd-card-bg)] p-3">
+    <div className="flex w-[208px] shrink-0 flex-col rounded-[10px] bg-[var(--antd-card-bg)] p-6">
       <div className="relative">
         <input
           className={QUERY_INPUT}
@@ -184,7 +214,24 @@ function DeptTree({
         />
         <Search className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-[rgba(242,242,242,0.4)]" />
       </div>
-      <div className="mt-2 flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" role="tree">
+        {/* 顶部折叠/展开全部（官方 Tree 在 treeData 非空时渲染的 all 行） */}
+        {filtered.length > 0 && (
+          <div className="my-0.5 flex w-full items-center p-1">
+            <div
+              className="flex size-5 flex-1 cursor-pointer items-center"
+              onClick={() =>
+                setExpandedIds(allExpanded ? new Set() : new Set(expandableIds))
+              }
+            >
+              <ChevronRight
+                className={`text-foreground/80 size-4 transition-transform ${
+                  allExpanded ? 'rotate-90' : ''
+                }`}
+              />
+            </div>
+          </div>
+        )}
         {filtered.map((node) => (
           <TreeItem
             depth={0}
@@ -193,9 +240,15 @@ function DeptTree({
             node={node}
             selectedId={selectedId}
             onSelect={onSelect}
-            toggleExpand={toggleExpand}
+            onToggleExpand={toggleExpand}
           />
         ))}
+        {filtered.length === 0 && (
+          <div className="flex cursor-pointer flex-col items-center rounded-lg border border-[var(--antd-border)] p-10 text-sm font-medium text-[rgba(242,242,242,0.45)]">
+            <Inbox className="size-10" />
+            <div className="mt-1">{$t('common.noData')}</div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -265,7 +318,8 @@ export default function SystemUser() {
   const [userId, setUserId] = React.useState('');
   const [remark, setRemark] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('');
-  const [collapsed, setCollapsed] = React.useState(false);
+  // 查询表单整块的显隐（官方 toolbarConfig.search → vxe form collapse）
+  const [searchOpen, setSearchOpen] = React.useState(true);
 
   // 已提交的查询条件
   const [query, setQuery] = React.useState<QueryForm>({
@@ -516,7 +570,7 @@ export default function SystemUser() {
 
   return (
     <SystemPage>
-      <div className="flex h-full gap-2">
+      <div className="flex h-full gap-4">
         <DeptTree
           depts={depts}
           selectedId={query.deptId}
@@ -526,37 +580,37 @@ export default function SystemUser() {
             setQuery((prev) => ({ ...prev, deptId: id }));
           }}
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <QueryCard>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
-              <QueryItem label={$t('system.user.name')}>
-                <input
-                  className={QUERY_INPUT}
-                  placeholder={$t('ui.placeholder.input')}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </QueryItem>
-              <QueryItem label={$t('system.user.id')}>
-                <input
-                  className={QUERY_INPUT}
-                  placeholder={$t('ui.placeholder.input')}
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                />
-              </QueryItem>
-              <QueryItem label={$t('system.user.status')}>
-                <select
-                  className={`${QUERY_INPUT} cursor-pointer`}
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="">{$t('ui.placeholder.select')}</option>
-                  <option value="1">{$t('common.enabled')}</option>
-                  <option value="0">{$t('common.disabled')}</option>
-                </select>
-              </QueryItem>
-              {!collapsed && (
+        <div className="flex min-w-0 flex-1 flex-col gap-5">
+          {searchOpen && (
+            <QueryCard>
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
+                <QueryItem label={$t('system.user.name')}>
+                  <input
+                    className={QUERY_INPUT}
+                    placeholder={$t('ui.placeholder.input')}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </QueryItem>
+                <QueryItem label={$t('system.user.id')}>
+                  <input
+                    className={QUERY_INPUT}
+                    placeholder={$t('ui.placeholder.input')}
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                  />
+                </QueryItem>
+                <QueryItem label={$t('system.user.status')}>
+                  <select
+                    className={`${QUERY_INPUT} cursor-pointer`}
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">{$t('ui.placeholder.select')}</option>
+                    <option value="1">{$t('common.enabled')}</option>
+                    <option value="0">{$t('common.disabled')}</option>
+                  </select>
+                </QueryItem>
                 <QueryItem label={$t('system.user.remark')}>
                   <input
                     className={QUERY_INPUT}
@@ -565,57 +619,72 @@ export default function SystemUser() {
                     onChange={(e) => setRemark(e.target.value)}
                   />
                 </QueryItem>
-              )}
-              <QueryActions
-                collapsed={collapsed}
-                onCollapse={() => setCollapsed((v) => !v)}
-                onReset={() => {
-                  setName('');
-                  setUserId('');
-                  setRemark('');
-                  setStatusFilter('');
-                  setPage(1);
-                  setQuery({
-                    deptId: '',
-                    id: '',
-                    name: '',
-                    remark: '',
-                    status: '',
-                  });
-                }}
-                onSearch={() => {
-                  setPage(1);
-                  setQuery((prev) => ({
-                    ...prev,
-                    id: userId,
-                    name,
-                    remark,
-                    status: statusFilter,
-                  }));
-                }}
-              />
-            </div>
-          </QueryCard>
+                <QueryActions
+                  collapsed={!searchOpen}
+                  onCollapse={() => setSearchOpen((v) => !v)}
+                  onReset={() => {
+                    setName('');
+                    setUserId('');
+                    setRemark('');
+                    setStatusFilter('');
+                    setPage(1);
+                    setQuery({
+                      deptId: '',
+                      id: '',
+                      name: '',
+                      remark: '',
+                      status: '',
+                    });
+                  }}
+                  onSearch={() => {
+                    setPage(1);
+                    setQuery((prev) => ({
+                      ...prev,
+                      id: userId,
+                      name,
+                      remark,
+                      status: statusFilter,
+                    }));
+                  }}
+                />
+              </div>
+            </QueryCard>
+          )}
 
-          <div className="flex-1 rounded-[10px] bg-[var(--antd-card-bg)] px-3 py-2">
-            <TableToolbar title={$t('system.user.list')}>
+          <TablePanel
+            columns={columns}
+            onRefresh={fetchData}
+            search={{
+              onToggle: () => setSearchOpen((v) => !v),
+              open: searchOpen,
+            }}
+            title={$t('system.user.list')}
+            tools={
               <PrimaryBtn onClick={openCreate}>
                 <Plus className="size-5" />
                 {$t('ui.actionTitle.create', [$t('system.user.name')])}
               </PrimaryBtn>
-            </TableToolbar>
-            <DataTable columns={columns} rows={loading ? [] : rows} />
-            <Pagination
-              current={page}
-              pageSize={pageSize}
-              total={total}
-              onChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size);
-                setPage(1);
-              }}
-            />
-          </div>
+            }
+          >
+            {(filterColumns) => (
+              <>
+                <DataTable
+                  columns={filterColumns(columns)}
+                  rows={loading ? [] : rows}
+                />
+                <Pagination
+                  current={page}
+                  pageSize={pageSize}
+                  total={total}
+                  onChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              </>
+            )}
+          </TablePanel>
         </div>
       </div>
 

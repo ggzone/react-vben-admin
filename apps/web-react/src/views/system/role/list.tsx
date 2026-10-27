@@ -46,7 +46,7 @@ import {
   QUERY_INPUT,
   StatusSwitch,
   SystemPage,
-  TableToolbar,
+  TablePanel,
   type TableColumn,
 } from '#/views/system/components/table-page';
 
@@ -78,7 +78,8 @@ export default function SystemRole() {
   const [roleId, setRoleId] = React.useState('');
   const [remark, setRemark] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('');
-  const [collapsed, setCollapsed] = React.useState(false);
+  // 查询表单整块的显隐（官方 toolbarConfig.search → vxe form collapse）
+  const [searchOpen, setSearchOpen] = React.useState(true);
 
   const [query, setQuery] = React.useState<QueryForm>({
     id: '',
@@ -340,36 +341,36 @@ export default function SystemRole() {
   return (
     <SystemPage>
       <div className="flex h-full flex-col gap-3">
-        <QueryCard>
-          <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
-            <QueryItem label={$t('system.role.roleName')}>
-              <input
-                className={QUERY_INPUT}
-                placeholder={$t('ui.placeholder.input')}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </QueryItem>
-            <QueryItem label={$t('system.role.id')}>
-              <input
-                className={QUERY_INPUT}
-                placeholder={$t('ui.placeholder.input')}
-                value={roleId}
-                onChange={(e) => setRoleId(e.target.value)}
-              />
-            </QueryItem>
-            <QueryItem label={$t('system.role.status')}>
-              <select
-                className={`${QUERY_INPUT} cursor-pointer`}
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">{$t('ui.placeholder.select')}</option>
-                <option value="1">{$t('common.enabled')}</option>
-                <option value="0">{$t('common.disabled')}</option>
-              </select>
-            </QueryItem>
-            {!collapsed && (
+        {searchOpen && (
+          <QueryCard>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
+              <QueryItem label={$t('system.role.roleName')}>
+                <input
+                  className={QUERY_INPUT}
+                  placeholder={$t('ui.placeholder.input')}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </QueryItem>
+              <QueryItem label={$t('system.role.id')}>
+                <input
+                  className={QUERY_INPUT}
+                  placeholder={$t('ui.placeholder.input')}
+                  value={roleId}
+                  onChange={(e) => setRoleId(e.target.value)}
+                />
+              </QueryItem>
+              <QueryItem label={$t('system.role.status')}>
+                <select
+                  className={`${QUERY_INPUT} cursor-pointer`}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">{$t('ui.placeholder.select')}</option>
+                  <option value="1">{$t('common.enabled')}</option>
+                  <option value="0">{$t('common.disabled')}</option>
+                </select>
+              </QueryItem>
               <QueryItem label={$t('system.role.remark')}>
                 <input
                   className={QUERY_INPUT}
@@ -378,50 +379,65 @@ export default function SystemRole() {
                   onChange={(e) => setRemark(e.target.value)}
                 />
               </QueryItem>
-            )}
-            <QueryActions
-              collapsed={collapsed}
-              onCollapse={() => setCollapsed((v) => !v)}
-              onReset={() => {
-                setName('');
-                setRoleId('');
-                setRemark('');
-                setStatusFilter('');
-                setPage(1);
-                setQuery({ id: '', name: '', remark: '', status: '' });
-              }}
-              onSearch={() => {
-                setPage(1);
-                setQuery({
-                  id: roleId,
-                  name,
-                  remark,
-                  status: statusFilter,
-                });
-              }}
-            />
-          </div>
-        </QueryCard>
+              <QueryActions
+                collapsed={!searchOpen}
+                onCollapse={() => setSearchOpen((v) => !v)}
+                onReset={() => {
+                  setName('');
+                  setRoleId('');
+                  setRemark('');
+                  setStatusFilter('');
+                  setPage(1);
+                  setQuery({ id: '', name: '', remark: '', status: '' });
+                }}
+                onSearch={() => {
+                  setPage(1);
+                  setQuery({
+                    id: roleId,
+                    name,
+                    remark,
+                    status: statusFilter,
+                  });
+                }}
+              />
+            </div>
+          </QueryCard>
+        )}
 
-        <div className="flex-1 rounded-[10px] bg-[var(--antd-card-bg)] px-3 py-2">
-          <TableToolbar title={$t('system.role.list')}>
+        <TablePanel
+          columns={columns}
+          onRefresh={fetchData}
+          search={{
+            onToggle: () => setSearchOpen((v) => !v),
+            open: searchOpen,
+          }}
+          title={$t('system.role.list')}
+          tools={
             <PrimaryBtn onClick={openCreate}>
               <Plus className="size-5" />
               {$t('ui.actionTitle.create', [$t('system.role.name')])}
             </PrimaryBtn>
-          </TableToolbar>
-          <DataTable columns={columns} rows={loading ? [] : rows} />
-          <Pagination
-            current={page}
-            pageSize={pageSize}
-            total={total}
-            onChange={setPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-          />
-        </div>
+          }
+        >
+          {(filterColumns) => (
+            <>
+              <DataTable
+                columns={filterColumns(columns)}
+                rows={loading ? [] : rows}
+              />
+              <Pagination
+                current={page}
+                pageSize={pageSize}
+                total={total}
+                onChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPage(1);
+                }}
+              />
+            </>
+          )}
+        </TablePanel>
       </div>
 
       <FormDrawer

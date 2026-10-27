@@ -141,7 +141,7 @@ export function PageTransition() {
   if (!renderRouteView) return null;
 
   return (
-    <div key={viewKey} className={stageClass}>
+    <div className={`h-full ${stageClass ?? ''}`} key={viewKey}>
       {node}
     </div>
   );

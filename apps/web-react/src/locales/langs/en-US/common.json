@@ -20,5 +20,10 @@
   "yes": "Yes",
   "no": "No",
   "showSearchPanel": "Show search panel",
-  "hideSearchPanel": "Hide search panel"
+  "hideSearchPanel": "Hide search panel",
+  "all": "All",
+  "fullscreen": "Full screen",
+  "restore": "Restore",
+  "resetDefault": "Restore default",
+  "columnSetting": "Column setting"
 }

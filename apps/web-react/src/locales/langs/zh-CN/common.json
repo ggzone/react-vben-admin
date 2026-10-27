@@ -20,5 +20,10 @@
   "yes": "是",
   "no": "否",
   "showSearchPanel": "显示搜索面板",
-  "hideSearchPanel": "隐藏搜索面板"
+  "hideSearchPanel": "隐藏搜索面板",
+  "all": "全部",
+  "fullscreen": "全屏",
+  "restore": "还原",
+  "resetDefault": "恢复默认",
+  "columnSetting": "列设置"
 }

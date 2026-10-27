@@ -33,7 +33,12 @@ import {
   type TreeOption,
 } from '#/views/system/components/form';
 import { message } from '#/views/system/components/feedback';
-import { StatusTag, SystemPage } from '#/views/system/components/table-page';
+import {
+  PrimaryBtn,
+  StatusTag,
+  SystemPage,
+  TablePanel,
+} from '#/views/system/components/table-page';
 
 interface EditForm {
   name: string;
@@ -366,81 +371,80 @@ export default function SystemDept() {
   return (
     <SystemPage>
       <div className="flex h-full flex-col">
-        <div className="flex-1 rounded-[10px] bg-[var(--antd-card-bg)] px-3 py-2">
-          <div className="flex items-center justify-between px-2 pb-[17px]">
-            <div className="text-[15px] leading-[32px] font-semibold text-[var(--antd-text)]">
-              {$t('system.dept.list')}
-            </div>
-            <button
-              className="inline-flex h-8 cursor-pointer items-center justify-center gap-1 rounded-lg border-transparent bg-[var(--antd-primary)] px-[15px] text-sm leading-[22px] text-white transition-opacity hover:opacity-90"
-              type="button"
-              onClick={() => openCreate()}
-            >
+        <TablePanel
+          columns={columns}
+          onRefresh={load}
+          title={$t('system.dept.list')}
+          tools={
+            <PrimaryBtn onClick={() => openCreate()}>
               <Plus className="size-5" />
               {$t('ui.actionTitle.create', [$t('system.dept.name')])}
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm text-[var(--antd-text)]">
-              <thead>
-                <tr>
-                  {columns.map((col, i) => (
-                    <th
-                      className={`overflow-hidden border-b border-[var(--antd-border)] bg-[#2e3033] px-4 font-normal text-[rgba(242,242,242,0.65)] whitespace-nowrap ${
-                        col.align === 'left'
-                          ? 'text-left'
-                          : col.align === 'right'
-                            ? 'text-right'
-                            : 'text-center'
-                      }`}
-                      key={i}
-                      style={{
-                        ...({ height: 38 } as React.CSSProperties),
-                        ...(col.width ? { width: col.width } : {}),
-                      }}
-                    >
-                      {col.title}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {flat.map(({ depth, hasChildren, row }) => (
-                  <tr
-                    className="transition-colors hover:bg-[rgba(255,255,255,0.04)]"
-                    key={row.id}
-                  >
-                    {columns.map((col, ci) => (
-                      <td
-                        className={`border-b border-[var(--antd-border)] px-4 align-middle whitespace-nowrap ${
+            </PrimaryBtn>
+          }
+        >
+          {(filterColumns) => (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm text-[var(--antd-text)]">
+                <thead>
+                  <tr>
+                    {filterColumns(columns).map((col, i) => (
+                      <th
+                        className={`overflow-hidden border-b border-[var(--antd-border)] bg-[#2e3033] px-4 font-normal text-[rgba(242,242,242,0.65)] whitespace-nowrap ${
                           col.align === 'left'
                             ? 'text-left'
                             : col.align === 'right'
                               ? 'text-right'
                               : 'text-center'
                         }`}
-                        key={ci}
-                        style={{ height: 40 } as React.CSSProperties}
+                        key={i}
+                        style={{
+                          ...({ height: 40 } as React.CSSProperties),
+                          ...(col.width ? { width: col.width } : {}),
+                        }}
                       >
-                        {col.render({ depth, hasChildren, row })}
-                      </td>
+                        {col.title}
+                      </th>
                     ))}
                   </tr>
-                ))}
-                {!loading && flat.length === 0 && (
-                  <tr>
-                    <td
-                      className="py-10 text-center text-[rgba(242,242,242,0.45)]"
-                      colSpan={columns.length}
+                </thead>
+                <tbody>
+                  {flat.map(({ depth, hasChildren, row }) => (
+                    <tr
+                      className="transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                      key={row.id}
                     >
-                      暂无数据
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      {filterColumns(columns).map((col, ci) => (
+                        <td
+                          className={`border-b border-[var(--antd-border)] px-4 align-middle whitespace-nowrap ${
+                            col.align === 'left'
+                              ? 'text-left'
+                              : col.align === 'right'
+                                ? 'text-right'
+                                : 'text-center'
+                          }`}
+                          key={ci}
+                          style={{ height: 40 } as React.CSSProperties}
+                        >
+                          {col.render?.({ depth, hasChildren, row })}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  {!loading && flat.length === 0 && (
+                    <tr>
+                      <td
+                        className="py-10 text-center text-[rgba(242,242,242,0.45)]"
+                        colSpan={filterColumns(columns).length}
+                      >
+                        暂无数据
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TablePanel>
       </div>
 
       <FormDrawer

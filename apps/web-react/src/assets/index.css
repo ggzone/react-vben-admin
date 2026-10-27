@@ -1251,6 +1251,14 @@ html body[data-scroll-locked] ._scroll__fixed_ {
   box-shadow: var(--antd-shadow-primary);
 }
 
+/* 列设置浮层投影（官方 vxe-table custom panel 同款） */
+.antd-popover-shadow {
+  box-shadow:
+    0 6px 16px 0 rgb(0 0 0 / 32%),
+    0 3px 6px -4px rgb(0 0 0 / 48%),
+    0 9px 28px 8px rgb(0 0 0 / 20%);
+}
+
 .dark .antd-ui {
   --antd-card-bg: #1c1e23;
   --antd-input-bg: #1c1e23;
