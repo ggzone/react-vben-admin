@@ -39,6 +39,16 @@ const MOCK_USER_OPTIONS = [
 ];
 
 /**
+ * 选择账号时自动填充的口令
+ *
+ * 官方写死 123456（官方 backend-mock 的口令就是这个），但本项目 React 版
+ * 固定对接 backend-rust，其种子口令取自 `apps/backend-rust/.env` 的
+ * SEED_PASSWORD，两者不一致会导致「选了账号点登录没反应」（401）。
+ * 因此改成读 `VITE_DEMO_PASSWORD`，在 apps/web-react/.env.development 里配置。
+ */
+const DEMO_PASSWORD = (import.meta.env.VITE_DEMO_PASSWORD as string) ?? '';
+
+/**
  * 表单字段外壳 —— 对齐官方 form-field.vue 的实际渲染结构：
  * `<div class="relative flex shrink-0 flex-row items-center pb-4"><div class="flex-auto overflow-hidden p-px">…`
  * 官方 commonConfig 为 hideLabel:true，因此不渲染 label（账号/密码等文字只作为 placeholder）
@@ -102,7 +112,7 @@ export function AuthenticationLogin({
   const [username, setUsername] = useState(() => {
     return localStorage.getItem(REMEMBER_ME_KEY) || 'vben';
   });
-  const [password, setPassword] = useState('123456');
+  const [password, setPassword] = useState(DEMO_PASSWORD);
   const [captcha, setCaptcha] = useState(false);
   const [rememberMe, setRememberMe] = useState(
     () => !!localStorage.getItem(REMEMBER_ME_KEY),
@@ -115,7 +125,7 @@ export function AuthenticationLogin({
     const findUser = MOCK_USER_OPTIONS.find((item) => item.value === value);
     if (findUser) {
       setUsername(findUser.value);
-      setPassword('123456');
+      if (DEMO_PASSWORD) setPassword(DEMO_PASSWORD);
     }
   }
 
@@ -134,7 +144,18 @@ export function AuthenticationLogin({
       return;
     }
     localStorage.setItem(REMEMBER_ME_KEY, rememberMe ? username : '');
-    onSubmit?.({ password, username });
+    // 提交失败必须可见：官方后台落错误码不同（401 口令错 / 429 限流 / 403 …），
+    // 这里把请求层透传的 message 直接展示；否则 Promise 拒绝被静默吞掉，
+    // 表现就是「点登录按钮没反应，也没有任何提示」。
+    try {
+      await onSubmit?.({ password, username });
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : $t('authentication.passwordErrorTip'),
+      );
+    }
   }
 
   return (

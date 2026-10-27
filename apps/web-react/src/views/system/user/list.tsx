@@ -223,14 +223,29 @@ function DeptTree({
         </button>
       </div>
       <div className="flex-1 overflow-y-auto" role="tree">
-        {/* 顶部折叠/展开全部（官方 Tree 在 treeData 非空时渲染的 all 行） */}
+        {/* 顶部「全部」行
+            原实现只有一枚 ChevronRight（官方 tree.vue 的 selectAllLabel 为空时就是这样），
+            视觉上像多出一个「空的一级节点」。这里补上「全部」文案：
+            - 点整行 = 清空部门筛选（回到全部用户）
+            - 点箭头 = 折叠/展开全部（保留官方行为，stopPropagation 不影响外层） */}
         {filtered.length > 0 && (
-          <div className="my-0.5 flex w-full items-center p-1">
+          <div
+            aria-selected={!selectedId}
+            className={`my-0.5 flex w-full cursor-pointer items-center rounded p-1 text-sm leading-5 font-medium text-[var(--antd-text)] ${
+              selectedId ? '' : 'bg-[#2e3033]'
+            }`}
+            role="treeitem"
+            title={$t('common.all')}
+            onClick={() => onSelect('')}
+          >
             <div
-              className="flex size-5 flex-1 cursor-pointer items-center"
-              onClick={() =>
-                setExpandedIds(allExpanded ? new Set() : new Set(expandableIds))
-              }
+              className="flex size-5 shrink-0 cursor-pointer items-center"
+              onClick={(event) => {
+                event.stopPropagation();
+                setExpandedIds(
+                  allExpanded ? new Set() : new Set(expandableIds),
+                );
+              }}
             >
               <ChevronRight
                 className={`text-foreground/80 size-4 transition-transform ${
@@ -238,6 +253,7 @@ function DeptTree({
                 }`}
               />
             </div>
+            <span className="ml-1 truncate">{$t('common.all')}</span>
           </div>
         )}
         {filtered.map((node) => (
