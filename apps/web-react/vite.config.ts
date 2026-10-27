@@ -6,17 +6,20 @@ import { fileURLToPath, URL } from 'node:url';
 import { viteMockPlugin } from './vite-mock/index';
 
 export default defineConfig(({ mode }) => {
-  // 后端切换开关：
-  // - 未设置 VITE_API_TARGET：沿用内置 vite-mock 插件（默认开发态，无需外部服务）
-  // - 设置 VITE_API_TARGET（如 http://127.0.0.1:5330）：停用内置 mock，全部 /api 代理到真实后端
-  const apiTarget = process.env.VITE_API_TARGET;
-  console.log('[vite-config] VITE_API_TARGET =', JSON.stringify(apiTarget));
+  // 后端选择：
+  // - 默认：backend-rust（http://127.0.0.1:5330）—— 本项目 React 版固定与 rust 后端搭配
+  // - VITE_API_TARGET=<url>：改用指定的其他后端
+  // - VITE_API_TARGET=off：停用代理、启用内置 vite-mock（仅用于无后端时看静态页面；
+  //   该模式权限码只有 AC_* 演示码，不含 system:*:list，系统管理菜单不可见，属预期）
+  const rawTarget = process.env.VITE_API_TARGET;
+  const apiTarget =
+    rawTarget === 'off' ? undefined : rawTarget || 'http://127.0.0.1:5330';
+  console.log(
+    '[vite-config] VITE_API_TARGET =',
+    JSON.stringify(apiTarget ?? 'off'),
+  );
   return {
-    plugins: [
-      react(),
-      tailwindcss(),
-      ...(apiTarget ? [] : [viteMockPlugin()]),
-    ],
+    plugins: [react(), tailwindcss(), ...(apiTarget ? [] : [viteMockPlugin()])],
     resolve: {
       alias: {
         '#': fileURLToPath(new URL('./src', import.meta.url)),
@@ -25,7 +28,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5667,
       host: true,
-      // 系统管理接口走 backend-mock（与 playground 同一数据源，保证两端数据一致）
       proxy: apiTarget
         ? {
             '/api': {

@@ -10,6 +10,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
 
+import { getAccessCodesApi } from '#/api/core/auth';
 import { LOGIN_PATH } from '#/constants';
 import { usePreferencesStore } from '#/preferences/store';
 import { useAccessStore } from '#/stores/access';
@@ -26,6 +27,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   const userInfo = useUserStore((state) => state.userInfo);
   const fetchUserInfo = useAuthStore((state) => state.fetchUserInfo);
+  const accessCodes = useAccessStore((state) => state.accessCodes);
+  const setAccessCodes = useAccessStore((state) => state.setAccessCodes);
   const setAccessMenus = useAccessStore((state) => state.setAccessMenus);
   const setIsAccessChecked = useAccessStore(
     (state) => state.setIsAccessChecked,
@@ -45,9 +48,42 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         const info = userInfo || (await fetchUserInfo());
         if (cancelled) return;
 
-        // frontend 模式：根据路由树（含分组层级）生成菜单，
-        // 并按后端 /user/info 下发的 accessCodes 过滤（authority 任一命中即可见）
-        const menus = generateMenus(allRoutes, {}, (info as any)?.accessCodes ?? []);
+        // frontend 模式：根据路由树（含分组层级）生成菜单，并按权限码过滤
+        // （authority 任一命中即可见）
+        //
+        // 权限码来源按优先级取，缺一不可：
+        // 1. /user/info 返回体里的 accessCodes —— rust 后端会下发（本项目
+        //    React 版固定对接 rust，见 vite.config.ts 的 VITE_API_TARGET），
+        //    是「当前账号」最权威的一条，命中后同时写回 store（纠正过期旧码）
+        // 2. accessStore.accessCodes —— 登录时由 /auth/codes 写入并持久化，
+        //    刷新页面后依然有效（后端未下发字段时兜底）
+        // 3. 兜底再拉一次 /auth/codes
+        //
+        // 历史缺陷：这里原来只读 `info.accessCodes` 且不做兜底，
+        // 一旦该字段缺失 → 权限码为空数组 → 所有声明 authority 的菜单
+        // （系统管理四个子页）被整体过滤，目录因「子项为空」也被移除，
+        // 表现为「系统管理菜单消失」。
+        // 注意：内置 vite-mock 的 /auth/codes 只返回 AC_* 演示码、不含
+        // system:*:list，因此纯 mock 模式下系统管理菜单本就不可见 —— 属于预期，
+        // 该模式仅用于无后端时看静态页面。
+        let codes: string[] = [];
+        const fromInfo = (info as any)?.accessCodes;
+        if (Array.isArray(fromInfo) && fromInfo.length > 0) {
+          codes = fromInfo;
+          setAccessCodes(codes);
+        } else if (accessCodes.length > 0) {
+          codes = accessCodes;
+        } else {
+          try {
+            codes = await getAccessCodesApi();
+            if (!cancelled && codes.length > 0) setAccessCodes(codes);
+          } catch {
+            codes = [];
+          }
+        }
+        if (cancelled) return;
+
+        const menus = generateMenus(allRoutes, {}, codes);
         setAccessMenus(menus);
         setIsAccessChecked(true);
       } catch {
@@ -62,9 +98,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [
+    accessCodes,
     accessToken,
     fetchUserInfo,
     isAccessChecked,
+    setAccessCodes,
     setIsAccessChecked,
     setAccessMenus,
     userInfo,
