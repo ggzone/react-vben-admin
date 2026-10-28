@@ -138,7 +138,7 @@ export function Select({
   const showClear = allowClear && !disabled && !!value && (hover || open);
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative', className)} ref={wrapRef}>
       <button
         aria-expanded={open}
         aria-haspopup="listbox"

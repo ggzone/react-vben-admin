@@ -198,7 +198,7 @@ export function RangePicker({
   const rangeEnd = start ? (preview ?? start) : null;
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative', className)} ref={wrapRef}>
       <button
         aria-expanded={open}
         className={cn(
