@@ -4,6 +4,8 @@
  * 布局：查询表单区 + 角色列表表格 + 分页（无部门树，全宽）
  * 交互：
  * - 新增 / 编辑 → 右侧抽屉表单（官方 role/modules/form.vue）
+ * - 详情 → 右侧抽屉 + VbenDescriptions（与用户页同一套规格，官方 detail.vue）
+ * - 操作列 → VbenTableAction：详情 / 修改 内联，删除收进「更多」下拉并带气泡二次确认
  * - 删除 → loading/success 消息（官方 onDelete）
  * - 状态开关 → 二次确认后 updateRole（官方 onStatusChange）
  *
@@ -12,7 +14,7 @@
  */
 import * as React from 'react';
 
-import { Plus } from 'lucide-react';
+import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
 
 import {
   createRole,
@@ -36,8 +38,13 @@ import {
 } from '#/views/system/components/form';
 import { confirmOrThrow, message } from '#/views/system/components/feedback';
 import {
+  Descriptions,
+  DetailDrawer,
+  type DescItem,
+} from '#/views/system/components/detail';
+import { TableAction } from '#/views/system/components/table-action';
+import {
   DataTable,
-  LinkBtn,
   Pagination,
   PrimaryBtn,
   QueryActions,
@@ -45,6 +52,7 @@ import {
   QueryItem,
   QUERY_INPUT,
   StatusSwitch,
+  StatusTag,
   SystemPage,
   TablePanel,
   type TableColumn,
@@ -94,6 +102,12 @@ export default function SystemRole() {
   const [form, setForm] = React.useState<EditForm>(EMPTY_FORM);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [saving, setSaving] = React.useState(false);
+
+  // 详情抽屉（与用户页同一套：VbenDescriptions bordered，单列）
+  const [detailOpen, setDetailOpen] = React.useState(false);
+  const [detailRow, setDetailRow] = React.useState<null | SystemApi.RoleItem>(
+    null,
+  );
 
   // 菜单权限树（官方 loadPermissions：加载一次后缓存）
   const [menuTree, setMenuTree] = React.useState<CheckTreeNode[]>([]);
@@ -190,6 +204,38 @@ export default function SystemRole() {
       });
   };
 
+  /* --------- 详情 --------- */
+  const openDetail = (row: SystemApi.RoleItem) => {
+    setDetailRow(row);
+    setDetailOpen(true);
+  };
+
+  const detailItems: DescItem[] = detailRow
+    ? [
+        {
+          content: detailRow.name ?? '',
+          label: $t('system.role.roleName'),
+        },
+        {
+          content: detailRow.code ?? '',
+          label: '角色标识',
+        },
+        { content: detailRow.id, label: $t('system.role.id') },
+        {
+          content: <StatusTag status={detailRow.status ?? 1} />,
+          label: $t('system.role.status'),
+        },
+        {
+          content: detailRow.createTime ?? '',
+          label: $t('system.role.createTime'),
+        },
+        {
+          content: detailRow.remark ?? '',
+          label: $t('system.role.remark'),
+        },
+      ]
+    : [];
+
   /* --------- 新增 / 编辑 --------- */
   const openCreate = () => {
     setEditing(null);
@@ -283,24 +329,16 @@ export default function SystemRole() {
     }
   };
 
+  /* 列结构与宽度对齐官方 role/data.ts 的 useColumns：角色名称 200 / 角色ID 200 /
+     状态 100 / 备注 min100 / 创建时间 200 / 操作 130（官方无「角色标识」列，它在详情抽屉里） */
   const columns: TableColumn[] = [
     {
       align: 'left',
       render: (row) => row.name,
       title: $t('system.role.roleName'),
-      width: 180,
+      width: 200,
     },
-    {
-      align: 'left',
-      render: (row) => (
-        <span className="block truncate font-mono text-[rgba(242,242,242,0.65)]">
-          {row.code ?? ''}
-        </span>
-      ),
-      title: '角色标识',
-      width: 140,
-    },
-    { render: (row) => row.id, title: $t('system.role.id'), width: 120 },
+    { align: 'left', render: (row) => row.id, title: $t('system.role.id'), width: 200 },
     {
       render: (row) => (
         <StatusSwitch
@@ -325,13 +363,33 @@ export default function SystemRole() {
       width: 200,
     },
     {
+      align: 'center',
       render: (row) => (
-        <div className="flex items-center justify-center gap-3">
-          <LinkBtn onClick={() => openEdit(row)}>{$t('common.edit')}</LinkBtn>
-          <LinkBtn danger onClick={() => onDelete(row)}>
-            {$t('common.delete')}
-          </LinkBtn>
-        </div>
+        <TableAction
+          actions={[
+            {
+              icon: Eye,
+              onClick: () => openDetail(row),
+              text: $t('common.detail'),
+            },
+            {
+              icon: Pencil,
+              onClick: () => openEdit(row),
+              text: $t('common.edit'),
+            },
+          ]}
+          dropdownActions={[
+            {
+              danger: true,
+              icon: Trash2,
+              popConfirm: {
+                confirm: () => onDelete(row),
+                title: $t('ui.actionMessage.deleteConfirm', [row.name]),
+              },
+              text: $t('common.delete'),
+            },
+          ]}
+        />
       ),
       title: $t('system.role.operation'),
       width: 130,
@@ -520,6 +578,14 @@ export default function SystemRole() {
           </FormItem>
         </div>
       </FormDrawer>
+
+      <DetailDrawer
+        open={detailOpen}
+        title={$t('common.detail')}
+        onClose={() => setDetailOpen(false)}
+      >
+        <Descriptions items={detailItems} />
+      </DetailDrawer>
     </SystemPage>
   );
 }

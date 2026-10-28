@@ -6,6 +6,8 @@
  * - 部门树点击 → 选中并立即按该部门重新查询（官方 selectDept → gridApi.query）
  * - 部门树搜索 → 过滤（官方 searchDept）
  * - 新增 / 编辑 → 右侧抽屉表单（官方 form.vue + useVbenDrawer）
+ * - 详情 → 右侧抽屉 + VbenDescriptions（官方 detail.vue，无 footer）
+ * - 操作列 → VbenTableAction：详情 / 修改 内联，删除收进「更多」下拉并带气泡二次确认
  * - 删除 → 二次确认 + loading/success 消息（官方 onDelete）
  * - 状态开关 → 二次确认后调 updateUser(id, { status })（官方 onStatusChange）
  *
@@ -13,7 +15,7 @@
  * 不落 remark，因此表单不提供备注输入（避免“填了不生效”），查询区的备注查询保留。
  */
 import * as React from 'react';
-import { ChevronRight, Inbox, Plus, Search } from 'lucide-react';
+import { ChevronRight, Eye, Inbox, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 
 import {
   createUser,
@@ -34,8 +36,13 @@ import {
 } from '#/views/system/components/form';
 import { confirmOrThrow, message } from '#/views/system/components/feedback';
 import {
+  Descriptions,
+  DetailDrawer,
+  type DescItem,
+} from '#/views/system/components/detail';
+import { TableAction } from '#/views/system/components/table-action';
+import {
   DataTable,
-  LinkBtn,
   Pagination,
   PrimaryBtn,
   QueryActions,
@@ -43,6 +50,7 @@ import {
   QueryItem,
   QUERY_INPUT,
   StatusSwitch,
+  StatusTag,
   SystemPage,
   TablePanel,
   type TableColumn,
@@ -361,6 +369,12 @@ export default function SystemUser() {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [saving, setSaving] = React.useState(false);
 
+  // 详情抽屉（官方 detail.vue + VbenDescriptions）
+  const [detailOpen, setDetailOpen] = React.useState(false);
+  const [detailRow, setDetailRow] = React.useState<null | SystemApi.UserItem>(
+    null,
+  );
+
   const fetchData = React.useCallback(() => {
     setLoading(true);
     getUserList({
@@ -443,6 +457,42 @@ export default function SystemUser() {
         message.error(error?.message || '删除失败');
       });
   };
+
+  /* --------- 详情（官方 onDetail） --------- */
+  const openDetail = (row: SystemApi.UserItem) => {
+    setDetailRow(row);
+    setDetailOpen(true);
+  };
+
+  const detailItems: DescItem[] = detailRow
+    ? [
+        {
+          content: (detailRow as any).username ?? '',
+          label: $t('system.user.name'),
+        },
+        {
+          content: detailRow.name ?? '',
+          label: $t('system.user.userName'),
+        },
+        { content: detailRow.id, label: $t('system.user.id') },
+        {
+          content: deptNames[detailRow.deptId ?? ''] ?? '',
+          label: $t('system.user.dept'),
+        },
+        {
+          content: <StatusTag status={detailRow.status ?? 1} />,
+          label: $t('system.user.status'),
+        },
+        {
+          content: detailRow.createTime ?? '',
+          label: $t('system.user.createTime'),
+        },
+        {
+          content: detailRow.remark ?? '',
+          label: $t('system.user.remark'),
+        },
+      ]
+    : [];
 
   /* --------- 新增 / 编辑 --------- */
   const openCreate = () => {
@@ -528,6 +578,9 @@ export default function SystemUser() {
     }
   };
 
+  /* 列结构与宽度对齐官方 user/data.ts 的 useColumns：用户名 200 / 用户ID 200 /
+     状态 100 / 备注 min100 / 创建时间 200 / 操作 130（操作列固定右侧）
+     官方没有「用户名称」「部门」列，这两项放在详情抽屉里看 */
   const columns: TableColumn[] = [
     {
       align: 'left',
@@ -535,23 +588,13 @@ export default function SystemUser() {
         <span className="block truncate">{(row as any).username ?? ''}</span>
       ),
       title: $t('system.user.name'),
-      width: 160,
+      width: 200,
     },
     {
       align: 'left',
-      render: (row) => <span className="block truncate">{row.name}</span>,
-      title: $t('system.user.userName'),
-      width: 160,
-    },
-    {
-      align: 'left',
-      render: (row) => (
-        <span className="block truncate">
-          {deptNames[row.deptId ?? ''] ?? ''}
-        </span>
-      ),
-      title: $t('system.user.dept'),
-      width: 140,
+      render: (row) => <span className="block truncate">{row.id}</span>,
+      title: $t('system.user.id'),
+      width: 200,
     },
     {
       render: (row) => (
@@ -577,13 +620,33 @@ export default function SystemUser() {
       width: 200,
     },
     {
+      align: 'center',
       render: (row) => (
-        <div className="flex items-center justify-center gap-3">
-          <LinkBtn onClick={() => openEdit(row)}>{$t('common.edit')}</LinkBtn>
-          <LinkBtn danger onClick={() => onDelete(row)}>
-            {$t('common.delete')}
-          </LinkBtn>
-        </div>
+        <TableAction
+          actions={[
+            {
+              icon: Eye,
+              onClick: () => openDetail(row),
+              text: $t('common.detail'),
+            },
+            {
+              icon: Pencil,
+              onClick: () => openEdit(row),
+              text: $t('common.edit'),
+            },
+          ]}
+          dropdownActions={[
+            {
+              danger: true,
+              icon: Trash2,
+              popConfirm: {
+                confirm: () => onDelete(row),
+                title: $t('ui.actionMessage.deleteConfirm', [row.name]),
+              },
+              text: $t('common.delete'),
+            },
+          ]}
+        />
       ),
       title: $t('system.user.operation'),
       width: 130,
@@ -794,6 +857,14 @@ export default function SystemUser() {
           </FormItem>
         </div>
       </FormDrawer>
+
+      <DetailDrawer
+        open={detailOpen}
+        title={$t('common.detail')}
+        onClose={() => setDetailOpen(false)}
+      >
+        <Descriptions items={detailItems} />
+      </DetailDrawer>
     </SystemPage>
   );
 }

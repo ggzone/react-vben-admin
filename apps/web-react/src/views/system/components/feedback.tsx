@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 import { Dialog, DialogContent } from '#/components/ui/dialog';
-import { BTN_DEFAULT, BTN_PRIMARY } from '#/views/system/components/form';
+import { BTN_DEFAULT, BTN_PRIMARY, antdButtonText } from '#/views/system/components/form';
 
 type MessageType = 'error' | 'info' | 'loading' | 'success' | 'warning';
 
@@ -242,14 +242,15 @@ export function confirmModal(options: ConfirmOptions): Promise<boolean> {
                   type="button"
                   onClick={() => close(false)}
                 >
-                  {options.cancelText ?? 'Cancel'}
+                  {/* 对齐 antd Modal.confirm 的中文默认按钮文案（FormDrawer footer 同理） */}
+                  {options.cancelText ?? antdButtonText('取消')}
                 </button>
                 <button
                   className={BTN_PRIMARY}
                   type="button"
                   onClick={() => close(true)}
                 >
-                  {options.okText ?? 'OK'}
+                  {options.okText ?? antdButtonText('确定')}
                 </button>
               </div>
             </div>
