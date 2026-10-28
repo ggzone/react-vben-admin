@@ -147,24 +147,24 @@ function ColumnSettingPanel({
   onCancel,
   onToggleOne,
   onToggleAll,
-  fullscreen,
+  panelRef,
 }: {
   allKeys: string[];
   draftHidden: string[];
-  /** 全屏时工具栏贴视口顶，面板改为向下弹，避免超出可视区域 */
-  fullscreen?: boolean;
   onApply: () => void;
   onCancel: () => void;
   onToggleAll: (hide: boolean) => void;
   onToggleOne: (key: string) => void;
+  panelRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const hidden = new Set(draftHidden);
   const allVisible = hidden.size === 0;
   return (
     <div
-      className={`antd-popover-shadow absolute right-1 z-50 w-[234px] overflow-hidden rounded-[4px] border border-[var(--antd-border)] bg-[#1c1e23] text-sm ${
-        fullscreen ? 'top-[44px]' : '-top-[35px]'
-      }`}
+      /* 面板从工具栏行下方展开（官方 antd Popover 的 bottom-end），不能盖住触发按钮本身，
+         否则再点一次「列设置」收不起来 */
+      className="antd-popover-shadow absolute top-[46px] right-1 z-50 w-[234px] overflow-hidden rounded-[4px] border border-[var(--antd-border)] bg-[#1c1e23] text-sm"
+      ref={panelRef}
       role="dialog"
     >
       <div className="flex h-[30px] items-center gap-2 px-3">
@@ -291,6 +291,8 @@ export function TablePanel({
   const [settingOpen, setSettingOpen] = React.useState(false);
   const [hidden, setHidden] = React.useState<string[]>([]);
   const [draftHidden, setDraftHidden] = React.useState<string[]>([]);
+  const settingRef = React.useRef<HTMLDivElement | null>(null);
+  const settingBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const allKeys = React.useMemo(
     () => columns.map((c) => c.title).filter(Boolean),
@@ -306,6 +308,25 @@ export function TablePanel({
     (list: TableColumn[]) => list.filter((c) => !hidden.includes(c.title)),
     [hidden],
   );
+
+  /* 官方 Popover 行为：点面板外关闭（触发器自己交给 onClick 的 toggle，避免先关后开） */
+  React.useEffect(() => {
+    if (!settingOpen) {
+      return;
+    }
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (settingRef.current?.contains(target)) {
+        return;
+      }
+      if (settingBtnRef.current?.contains(target)) {
+        return;
+      }
+      setSettingOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [settingOpen]);
 
   React.useEffect(() => {
     if (!fullscreen) return;
@@ -366,6 +387,7 @@ export function TablePanel({
           <button
             aria-label="custom-column"
             className={`${CIRCLE_BTN} ${settingOpen ? CIRCLE_ON : CIRCLE_IDLE}`}
+            ref={settingBtnRef}
             title={$t('common.columnSetting')}
             type="button"
             onClick={openSetting}
@@ -377,7 +399,7 @@ export function TablePanel({
           <ColumnSettingPanel
             allKeys={allKeys}
             draftHidden={draftHidden}
-            fullscreen={fullscreen}
+            panelRef={settingRef}
             onApply={() => {
               setHidden(draftHidden);
               setSettingOpen(false);
