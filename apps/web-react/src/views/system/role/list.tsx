@@ -27,6 +27,8 @@ import {
   type SystemApi,
 } from '#/api/system';
 import { $t } from '#/locales';
+import { RangePicker, type DateRange } from '#/views/system/components/date-range';
+import { Select } from '#/views/system/components/select';
 import {
   CheckboxTree,
   FormDrawer,
@@ -63,6 +65,9 @@ interface QueryForm {
   name: string;
   remark: string;
   status: string;
+  /** 创建时间范围（YYYY-MM-DD） */
+  timeEnd: string;
+  timeStart: string;
 }
 
 interface EditForm {
@@ -86,6 +91,7 @@ export default function SystemRole() {
   const [roleId, setRoleId] = React.useState('');
   const [remark, setRemark] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('');
+  const [timeRange, setTimeRange] = React.useState<DateRange>(['', '']);
   // 查询表单整块的显隐（官方 toolbarConfig.search → vxe form collapse）
   const [searchOpen, setSearchOpen] = React.useState(true);
 
@@ -94,6 +100,8 @@ export default function SystemRole() {
     name: '',
     remark: '',
     status: '',
+    timeEnd: '',
+    timeStart: '',
   });
 
   // 抽屉
@@ -125,6 +133,9 @@ export default function SystemRole() {
       pageSize,
       remark: query.remark,
       status: query.status,
+      // 后端按 created_at 字符串比较，终点补 23:59:59 保证含当天
+      endTime: query.timeEnd ? `${query.timeEnd} 23:59:59` : '',
+      startTime: query.timeStart ? `${query.timeStart} 00:00:00` : '',
     })
       .then((res) => {
         setRows(res.items ?? []);
@@ -392,7 +403,7 @@ export default function SystemRole() {
         />
       ),
       title: $t('system.role.operation'),
-      width: 130,
+      width: 180,
     },
   ];
 
@@ -419,15 +430,16 @@ export default function SystemRole() {
                 />
               </QueryItem>
               <QueryItem label={$t('system.role.status')}>
-                <select
-                  className={`${QUERY_INPUT} cursor-pointer`}
+                <Select
+                  allowClear
+                  options={[
+                    { label: $t('common.enabled'), value: '1' },
+                    { label: $t('common.disabled'), value: '0' },
+                  ]}
+                  placeholder={$t('ui.placeholder.select')}
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="">{$t('ui.placeholder.select')}</option>
-                  <option value="1">{$t('common.enabled')}</option>
-                  <option value="0">{$t('common.disabled')}</option>
-                </select>
+                  onChange={setStatusFilter}
+                />
               </QueryItem>
               <QueryItem label={$t('system.role.remark')}>
                 <input
@@ -435,6 +447,12 @@ export default function SystemRole() {
                   placeholder={$t('ui.placeholder.input')}
                   value={remark}
                   onChange={(e) => setRemark(e.target.value)}
+                />
+              </QueryItem>
+              <QueryItem label={$t('system.role.createTime')}>
+                <RangePicker
+                  value={timeRange}
+                  onChange={setTimeRange}
                 />
               </QueryItem>
               <QueryActions
@@ -445,8 +463,16 @@ export default function SystemRole() {
                   setRoleId('');
                   setRemark('');
                   setStatusFilter('');
+                  setTimeRange(['', '']);
                   setPage(1);
-                  setQuery({ id: '', name: '', remark: '', status: '' });
+                  setQuery({
+                    id: '',
+                    name: '',
+                    remark: '',
+                    status: '',
+                    timeEnd: '',
+                    timeStart: '',
+                  });
                 }}
                 onSearch={() => {
                   setPage(1);
@@ -455,6 +481,8 @@ export default function SystemRole() {
                     name,
                     remark,
                     status: statusFilter,
+                    timeEnd: timeRange[1],
+                    timeStart: timeRange[0],
                   });
                 }}
               />

@@ -30,6 +30,7 @@ import {
 
 import { Dialog, DialogContent, DialogTitle } from '#/components/ui/dialog';
 import { cn } from '#/lib/utils';
+import { Select as BaseSelect, useDismiss } from '#/views/system/components/select';
 
 /* ---------------- 布局上下文 ---------------- */
 
@@ -297,7 +298,10 @@ export interface SelectOption {
   value: string;
 }
 
-/** antd Select 触发器：32 高、radius 8、右侧 12px 箭头、内右距 26 */
+/**
+ * antd Select：暗色弹层版（原生 <option> 无法定制配色，暗色主题下弹层是白底，
+ * 2026-10-28 用户截图问题 1 的根因；改用自绘 SelectMenu，视觉见 components/select.tsx）
+ */
 export function SelectField({
   disabled,
   onChange,
@@ -312,26 +316,14 @@ export function SelectField({
   value: string;
 }) {
   return (
-    <div className="relative">
-      <select
-        className={cn(
-          FIELD_CLASS,
-          'cursor-pointer appearance-none pr-[26px]',
-          !value && 'text-[var(--antd-placeholder)]',
-        )}
-        disabled={disabled}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {placeholder !== undefined && <option value="">{placeholder}</option>}
-        {options.map((opt) => (
-          <option disabled={opt.disabled} key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute top-1/2 right-[11px] size-3 -translate-y-1/2 text-[rgba(242,242,242,0.45)]" />
-    </div>
+    <BaseSelect
+      allowClear
+      disabled={disabled}
+      options={options}
+      placeholder={placeholder ?? '请选择'}
+      value={value}
+      onChange={onChange}
+    />
   );
 }
 
@@ -357,6 +349,10 @@ export function flattenTree(
   return out;
 }
 
+/**
+ * 树形下拉 —— 暗色弹层版：展开为扁平列表，层级用缩进 + 「└ 」前缀表达
+ * （与旧版 <option> 的文案格式保持一致），视觉对齐 antd TreeSelect 弹层。
+ */
 export function TreeSelect({
   disabled,
   onChange,
@@ -370,27 +366,91 @@ export function TreeSelect({
   placeholder?: string;
   value: string;
 }) {
+  const [open, setOpen] = React.useState(false);
+  const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+  useDismiss(open, () => setOpen(false), wrapRef.current, triggerRef.current);
+
   const flat = flattenTree(options);
+  const current = flat.find((node) => node.value === value);
+
   return (
-    <div className="relative">
-      <select
+    <div ref={wrapRef} className="relative">
+      <button
+        aria-expanded={open}
+        aria-haspopup="listbox"
         className={cn(
-          FIELD_CLASS,
-          'cursor-pointer appearance-none pr-[26px]',
-          !value && 'text-[var(--antd-placeholder)]',
+          'flex h-8 w-full cursor-pointer items-center rounded-lg border bg-[var(--antd-input-bg)] px-[11px] pr-[26px] text-sm outline-none transition-colors',
+          open
+            ? 'border-[var(--antd-primary)]'
+            : 'border-[var(--antd-border)] hover:border-[var(--antd-primary)]',
+          disabled &&
+            'cursor-not-allowed bg-[rgba(255,255,255,0.04)] text-[var(--antd-placeholder)]',
         )}
         disabled={disabled}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        ref={triggerRef}
+        type="button"
+        onClick={() => !disabled && setOpen((v) => !v)}
       >
-        <option value="">{placeholder ?? '请选择'}</option>
-        {flat.map((node) => (
-          <option key={node.value} value={node.value}>
-            {`${'\u00A0\u00A0'.repeat(node.depth)}${node.depth > 0 ? '└ ' : ''}${node.label}`}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute top-1/2 right-[11px] size-3 -translate-y-1/2 text-[rgba(242,242,242,0.45)]" />
+        <span
+          className={cn(
+            'min-w-0 flex-1 truncate text-left leading-[22px]',
+            current
+              ? 'text-[var(--antd-text)]'
+              : 'text-[var(--antd-placeholder)]',
+          )}
+        >
+          {current ? current.label : (placeholder ?? '请选择')}
+        </span>
+        <ChevronDown
+          className={cn(
+            'absolute top-1/2 right-[11px] size-3.5 -translate-y-1/2 text-[rgba(242,242,242,0.45)] transition-transform',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+      {open && (
+        <div
+          className="absolute top-[calc(100%+4px)] left-0 z-50 max-h-[274px] min-w-full overflow-y-auto rounded-lg border border-[var(--antd-border)] bg-[#1c1e23] py-1 antd-popover-shadow"
+          role="listbox"
+        >
+          <div
+            aria-selected={!value}
+            className="flex h-8 cursor-pointer items-center px-3 text-sm leading-[22px] text-[var(--antd-text)] hover:bg-[rgba(255,255,255,0.06)]"
+            onClick={() => {
+              onChange('');
+              setOpen(false);
+            }}
+          >
+            {placeholder ?? '请选择'}
+          </div>
+          {flat.map((node) => {
+            const selected = node.value === value;
+            return (
+              <div
+                aria-selected={selected}
+                className={cn(
+                  'flex h-8 cursor-pointer items-center text-sm leading-[22px] transition-colors',
+                  selected
+                    ? 'bg-[rgba(0,107,230,0.15)] font-medium text-[var(--antd-primary)]'
+                    : 'text-[var(--antd-text)] hover:bg-[rgba(255,255,255,0.06)]',
+                )}
+                key={node.value}
+                style={{ paddingLeft: `${12 + node.depth * 16}px` }}
+                onClick={() => {
+                  onChange(node.value);
+                  setOpen(false);
+                }}
+              >
+                {node.depth > 0 && (
+                  <span className="mr-1 text-[rgba(242,242,242,0.35)]">└</span>
+                )}
+                <span className="min-w-0 truncate">{node.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

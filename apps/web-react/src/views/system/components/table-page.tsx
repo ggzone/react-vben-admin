@@ -15,6 +15,7 @@
 import * as React from 'react';
 
 import { $t } from '#/locales';
+import { Select } from '#/views/system/components/select';
 
 import {
   ChevronDown,
@@ -456,7 +457,12 @@ export function DataTable({
           <tr>
             {columns.map((col, i) => (
               <th
-                className={`sticky top-0 z-[1] overflow-hidden border-b border-[var(--antd-border)] bg-[#2e3033] px-4 font-normal text-[rgba(242,242,242,0.65)] whitespace-nowrap ${alignClass(col.align)}`}
+                className={`sticky top-0 z-[1] overflow-hidden border-b border-[var(--antd-border)] bg-[#2e3033] px-4 font-normal text-[rgba(242,242,242,0.65)] whitespace-nowrap ${alignClass(col.align)} ${
+                  /* 官方 vxe 表头列间有竖分割线（borderCell），末列不加 */
+                  i < columns.length - 1
+                    ? 'border-r border-r-[rgba(253,253,253,0.12)]'
+                    : ''
+                }`}
                 key={i}
                 style={{
                   ...({ height: 40 } as React.CSSProperties),
@@ -538,17 +544,16 @@ export function Pagination({
     <div className="sticky bottom-0 z-[2] mt-auto flex items-center justify-between bg-[var(--antd-card-bg)] px-2 py-1.5 text-sm text-[var(--antd-text)]">
       <div className="flex items-center gap-2">
         <span>共 {total} 条记录</span>
-        <select
-          className="h-8 cursor-pointer rounded-lg border border-[var(--antd-border)] bg-[var(--antd-card-bg)] px-2 outline-none"
-          value={pageSize}
-          onChange={(e) => onPageSizeChange(Number(e.target.value))}
-        >
-          {PAGE_SIZES.map((s) => (
-            <option key={s} value={s}>
-              {s}条/页
-            </option>
-          ))}
-        </select>
+        {/* 暗色弹层下拉（原生 option 在暗色主题下是白底，无法定制） */}
+        <Select
+          className="w-[92px]"
+          options={PAGE_SIZES.map((s) => ({
+            label: `${s}条/页`,
+            value: String(s),
+          }))}
+          value={String(pageSize)}
+          onChange={(v) => onPageSizeChange(Number(v))}
+        />
       </div>
       <div className="flex items-center gap-1">
         <button

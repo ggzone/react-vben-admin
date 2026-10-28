@@ -26,6 +26,8 @@ import {
   type SystemApi,
 } from '#/api/system';
 import { $t } from '#/locales';
+import { RangePicker, type DateRange } from '#/views/system/components/date-range';
+import { Select } from '#/views/system/components/select';
 import {
   FormDrawer,
   FormItem,
@@ -313,14 +315,21 @@ function collectDeptNames(
 
 interface QueryForm {
   deptId: string;
+  /** 性别筛选：'' 全部 / 1 男 / 2 女（与官方字典 user_gender 一致） */
+  gender: string;
   id: string;
   name: string;
   remark: string;
   status: string;
+  /** 创建时间范围（YYYY-MM-DD） */
+  timeEnd: string;
+  timeStart: string;
 }
 
 interface EditForm {
   deptId: string;
+  /** 性别：0 未设置 / 1 男 / 2 女 */
+  gender: number;
   password: string;
   realName: string;
   status: number;
@@ -329,11 +338,24 @@ interface EditForm {
 
 const EMPTY_FORM: EditForm = {
   deptId: '',
+  gender: 0,
   password: '',
   realName: '',
   status: 1,
   username: '',
 };
+
+/** 性别字典（官方 user_gender：1 男 / 2 女） */
+const GENDER_OPTIONS = [
+  { label: $t('common.male'), value: '1' },
+  { label: $t('common.female'), value: '2' },
+];
+
+function genderLabel(gender?: number) {
+  if (gender === 1) return $t('common.male');
+  if (gender === 2) return $t('common.female');
+  return '';
+}
 
 export default function SystemUser() {
   const [rows, setRows] = React.useState<SystemApi.UserItem[]>([]);
@@ -350,16 +372,21 @@ export default function SystemUser() {
   const [userId, setUserId] = React.useState('');
   const [remark, setRemark] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('');
+  const [genderFilter, setGenderFilter] = React.useState('');
+  const [timeRange, setTimeRange] = React.useState<DateRange>(['', '']);
   // 查询表单整块的显隐（官方 toolbarConfig.search → vxe form collapse）
   const [searchOpen, setSearchOpen] = React.useState(true);
 
   // 已提交的查询条件
   const [query, setQuery] = React.useState<QueryForm>({
     deptId: '',
+    gender: '',
     id: '',
     name: '',
     remark: '',
     status: '',
+    timeEnd: '',
+    timeStart: '',
   });
 
   // 抽屉表单
@@ -379,12 +406,16 @@ export default function SystemUser() {
     setLoading(true);
     getUserList({
       deptId: query.deptId,
+      gender: query.gender,
       id: query.id,
       name: query.name,
       page,
       pageSize,
       remark: query.remark,
       status: query.status,
+      // 后端按 created_at 字符串比较，终点补 23:59:59 保证含当天
+      endTime: query.timeEnd ? `${query.timeEnd} 23:59:59` : '',
+      startTime: query.timeStart ? `${query.timeStart} 00:00:00` : '',
     })
       .then((res) => {
         setRows(res.items ?? []);
@@ -480,6 +511,10 @@ export default function SystemUser() {
           label: $t('system.user.dept'),
         },
         {
+          content: genderLabel((detailRow as any).gender),
+          label: $t('system.user.gender'),
+        },
+        {
           content: <StatusTag status={detailRow.status ?? 1} />,
           label: $t('system.user.status'),
         },
@@ -506,6 +541,7 @@ export default function SystemUser() {
     setEditing(row);
     setForm({
       deptId: row.deptId ?? '',
+      gender: (row as any).gender ?? 0,
       password: '',
       realName: row.name ?? '',
       status: row.status ?? 1,
@@ -555,6 +591,7 @@ export default function SystemUser() {
       if (editing) {
         await updateUser(editing.id, {
           deptId: form.deptId,
+          gender: form.gender,
           realName: form.realName.trim(),
           status: form.status,
         });
@@ -562,6 +599,7 @@ export default function SystemUser() {
       } else {
         await createUser({
           deptId: form.deptId,
+          gender: form.gender,
           password: form.password,
           realName: form.realName.trim(),
           status: form.status,
@@ -579,7 +617,8 @@ export default function SystemUser() {
   };
 
   /* 列结构与宽度对齐官方 user/data.ts 的 useColumns：用户名 200 / 用户ID 200 /
-     状态 100 / 备注 min100 / 创建时间 200 / 操作 130（操作列固定右侧）
+     性别 100（字典 user_gender）/ 状态 100 / 备注 min100 / 创建时间 200 /
+     操作 180（操作列固定右侧）
      官方没有「用户名称」「部门」列，这两项放在详情抽屉里看 */
   const columns: TableColumn[] = [
     {
@@ -595,6 +634,11 @@ export default function SystemUser() {
       render: (row) => <span className="block truncate">{row.id}</span>,
       title: $t('system.user.id'),
       width: 200,
+    },
+    {
+      render: (row) => genderLabel((row as any).gender),
+      title: $t('system.user.gender'),
+      width: 100,
     },
     {
       render: (row) => (
@@ -649,7 +693,7 @@ export default function SystemUser() {
         />
       ),
       title: $t('system.user.operation'),
-      width: 130,
+      width: 180,
     },
   ];
 
@@ -687,16 +731,26 @@ export default function SystemUser() {
                     onChange={(e) => setUserId(e.target.value)}
                   />
                 </QueryItem>
+                <QueryItem label={$t('system.user.gender')}>
+                  <Select
+                    allowClear
+                    options={GENDER_OPTIONS}
+                    placeholder={$t('ui.placeholder.select')}
+                    value={genderFilter}
+                    onChange={setGenderFilter}
+                  />
+                </QueryItem>
                 <QueryItem label={$t('system.user.status')}>
-                  <select
-                    className={`${QUERY_INPUT} cursor-pointer`}
+                  <Select
+                    allowClear
+                    options={[
+                      { label: $t('common.enabled'), value: '1' },
+                      { label: $t('common.disabled'), value: '0' },
+                    ]}
+                    placeholder={$t('ui.placeholder.select')}
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="">{$t('ui.placeholder.select')}</option>
-                    <option value="1">{$t('common.enabled')}</option>
-                    <option value="0">{$t('common.disabled')}</option>
-                  </select>
+                    onChange={setStatusFilter}
+                  />
                 </QueryItem>
                 <QueryItem label={$t('system.user.remark')}>
                   <input
@@ -704,6 +758,12 @@ export default function SystemUser() {
                     placeholder={$t('ui.placeholder.input')}
                     value={remark}
                     onChange={(e) => setRemark(e.target.value)}
+                  />
+                </QueryItem>
+                <QueryItem label={$t('system.user.createTime')}>
+                  <RangePicker
+                    value={timeRange}
+                    onChange={setTimeRange}
                   />
                 </QueryItem>
                 <QueryActions
@@ -714,23 +774,31 @@ export default function SystemUser() {
                     setUserId('');
                     setRemark('');
                     setStatusFilter('');
+                    setGenderFilter('');
+                    setTimeRange(['', '']);
                     setPage(1);
                     setQuery({
                       deptId: '',
+                      gender: '',
                       id: '',
                       name: '',
                       remark: '',
                       status: '',
+                      timeEnd: '',
+                      timeStart: '',
                     });
                   }}
                   onSearch={() => {
                     setPage(1);
                     setQuery((prev) => ({
                       ...prev,
+                      gender: genderFilter,
                       id: userId,
                       name,
                       remark,
                       status: statusFilter,
+                      timeEnd: timeRange[1],
+                      timeStart: timeRange[0],
                     }));
                   }}
                 />
@@ -842,6 +910,17 @@ export default function SystemUser() {
               placeholder={$t('ui.placeholder.select')}
               value={form.deptId}
               onChange={(v) => setForm((prev) => ({ ...prev, deptId: v }))}
+            />
+          </FormItem>
+
+          <FormItem label={$t('system.user.gender')}>
+            <RadioButtons
+              options={[
+                { label: $t('common.male'), value: 1 },
+                { label: $t('common.female'), value: 2 },
+              ]}
+              value={form.gender}
+              onChange={(v) => setForm((prev) => ({ ...prev, gender: v }))}
             />
           </FormItem>
 

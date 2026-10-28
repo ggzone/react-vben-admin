@@ -36,6 +36,7 @@ import {
   FormItem,
   FIELD_CLASS,
   RadioButtons,
+  SelectField,
   TreeSelect,
   type TreeOption,
 } from '#/views/system/components/form';
@@ -967,19 +968,20 @@ export default function SystemMenu() {
           {showBadge && (
             <>
               <FormItem label={$t('system.menu.badgeType.title')}>
-                <select
-                  className={`${FIELD_CLASS} cursor-pointer`}
-                  value={form.badgeType}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, badgeType: e.target.value }))
+                <SelectField
+                  onChange={(v) =>
+                    setForm((prev) => ({ ...prev, badgeType: v }))
                   }
-                >
-                  <option value="">{$t('system.menu.badgeType.none')}</option>
-                  <option value="dot">{$t('system.menu.badgeType.dot')}</option>
-                  <option value="normal">
-                    {$t('system.menu.badgeType.normal')}
-                  </option>
-                </select>
+                  options={[
+                    { label: $t('system.menu.badgeType.none'), value: '' },
+                    { label: $t('system.menu.badgeType.dot'), value: 'dot' },
+                    {
+                      label: $t('system.menu.badgeType.normal'),
+                      value: 'normal',
+                    },
+                  ]}
+                  value={form.badgeType}
+                />
               </FormItem>
               <FormItem label={$t('system.menu.badge')}>
                 <input
@@ -993,29 +995,22 @@ export default function SystemMenu() {
                 />
               </FormItem>
               <FormItem label={$t('system.menu.badgeVariants')}>
-                <select
-                  className={`${FIELD_CLASS} cursor-pointer`}
-                  value={form.badgeVariants}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      badgeVariants: e.target.value,
-                    }))
+                <SelectField
+                  onChange={(v) =>
+                    setForm((prev) => ({ ...prev, badgeVariants: v }))
                   }
-                >
-                  <option value="">{$t('ui.placeholder.select')}</option>
-                  {[
-                    'default',
-                    'destructive',
-                    'primary',
-                    'success',
-                    'warning',
-                  ].map((v) => (
-                    <option key={v} value={v}>
-                      {v}
-                    </option>
-                  ))}
-                </select>
+                  options={[
+                    { label: $t('ui.placeholder.select'), value: '' },
+                    ...[
+                      'default',
+                      'destructive',
+                      'primary',
+                      'success',
+                      'warning',
+                    ].map((v) => ({ label: v, value: v })),
+                  ]}
+                  value={form.badgeVariants}
+                />
               </FormItem>
             </>
           )}

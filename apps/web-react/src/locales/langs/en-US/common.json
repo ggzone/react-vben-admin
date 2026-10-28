@@ -27,5 +27,7 @@
   "fullscreen": "Full screen",
   "restore": "Restore",
   "resetDefault": "Restore default",
-  "columnSetting": "Column setting"
+  "columnSetting": "Column setting",
+  "male": "Male",
+  "female": "Female"
 }

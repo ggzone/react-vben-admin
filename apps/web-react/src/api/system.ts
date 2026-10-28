@@ -79,6 +79,8 @@ export namespace SystemApi {
   export interface UserItem {
     createTime?: string;
     deptId?: string;
+    /** 性别：0 未设置 / 1 男 / 2 女（官方字典 user_gender） */
+    gender?: number;
     id: string;
     /** 用户名称（后端 real_name） */
     name: string;
@@ -147,9 +149,10 @@ export function getDictList(params?: Record<string, any>) {
  * 页面层始终使用 camelCase，与 `SystemApi.UserItem` 等类型保持一致。
  */
 
-/** 新增用户（后端必填：username、password） */
+/** 新增用户（后端必填：username、password；gender 0 未设置/1 男/2 女） */
 export function createUser(payload: {
   deptId?: string | number;
+  gender?: number;
   password: string;
   realName?: string;
   status?: number;
@@ -157,6 +160,7 @@ export function createUser(payload: {
 }) {
   return requestClient.post<number>('/system/user', {
     dept_id: payload.deptId ? Number(payload.deptId) : 0,
+    gender: payload.gender ?? 0,
     password: payload.password,
     real_name: payload.realName ?? '',
     status: payload.status ?? 1,
@@ -164,13 +168,19 @@ export function createUser(payload: {
   });
 }
 
-/** 修改用户（可改姓名、部门、状态；用户名不可改） */
+/** 修改用户（可改姓名、部门、状态、性别；用户名不可改） */
 export function updateUser(
   id: string,
-  payload: { deptId?: string | number; realName?: string; status?: number },
+  payload: {
+    deptId?: string | number;
+    gender?: number;
+    realName?: string;
+    status?: number;
+  },
 ) {
   return requestClient.put('/system/user', {
     dept_id: payload.deptId ? Number(payload.deptId) : 0,
+    gender: payload.gender ?? 0,
     id,
     real_name: payload.realName ?? '',
     status: payload.status ?? 1,
