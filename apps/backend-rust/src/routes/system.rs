@@ -107,11 +107,16 @@ pub struct UserListQuery {
     /// 前端传 camelCase（deptId / pageSize / …），必须 rename_all = camelCase，
     /// 否则 deptId 收不到 → 部门树点了不过滤（恒返回全部用户）
     pub dept_id: Option<String>,
+    /// 创建时间范围终点（YYYY-MM-DD，含当天）
+    pub end_time: Option<String>,
+    pub gender: Option<String>,
     pub id: Option<String>,
     pub name: Option<String>,
     pub page: Option<i64>,
     pub page_size: Option<i64>,
     pub remark: Option<String>,
+    /// 创建时间范围起点（YYYY-MM-DD）
+    pub start_time: Option<String>,
     pub status: Option<String>,
 }
 
@@ -134,15 +139,27 @@ async fn user_list(
         Some(v) if !v.trim().is_empty() => Some(parse_id(Some(&v.to_string()), "status")?),
         _ => None,
     };
+    let gender = match query.gender.as_deref() {
+        Some(v) if !v.trim().is_empty() => Some(parse_id(Some(&v.to_string()), "gender")?),
+        _ => None,
+    };
+    let start_time = query.start_time.as_deref().unwrap_or("").trim().to_string();
+    let end_time = query.end_time.as_deref().unwrap_or("").trim().to_string();
 
+    let filter = admin_repo::UserFilter {
+        dept_id,
+        end_time: &end_time,
+        gender,
+        id,
+        name: query.name.as_deref().unwrap_or(""),
+        remark: query.remark.as_deref().unwrap_or(""),
+        start_time: &start_time,
+        status,
+    };
     let (items, total) = admin_repo::list_users(
         &state.pool,
         &PageQuery { page: query.page, page_size: query.page_size },
-        dept_id,
-        id,
-        query.name.as_deref().unwrap_or(""),
-        query.remark.as_deref().unwrap_or(""),
-        status,
+        &filter,
     )
     .await?;
     Ok(axum::Json(R::ok(Page::new(items, total))).into_response())
@@ -151,6 +168,7 @@ async fn user_list(
 #[derive(Debug, Deserialize)]
 pub struct UserCreateBody {
     pub dept_id: Option<i64>,
+    pub gender: Option<i64>,
     pub password: Option<String>,
     pub real_name: Option<String>,
     pub status: Option<i64>,
@@ -183,6 +201,7 @@ async fn user_create(
         body.real_name.as_deref().unwrap_or(&username),
         body.dept_id.unwrap_or(0),
         body.status.unwrap_or(1),
+        body.gender.unwrap_or(0),
     )
     .await?;
 
@@ -206,6 +225,7 @@ async fn user_create(
 #[derive(Debug, Deserialize)]
 pub struct UserUpdateBody {
     pub dept_id: Option<i64>,
+    pub gender: Option<i64>,
     pub id: Option<String>,
     pub real_name: Option<String>,
     pub status: Option<i64>,
@@ -229,6 +249,7 @@ async fn user_update(
         body.real_name.as_deref().unwrap_or(""),
         body.dept_id.unwrap_or(0),
         body.status.unwrap_or(1),
+        body.gender.unwrap_or(0),
     )
     .await?;
 
@@ -331,9 +352,11 @@ async fn user_reset_password(
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RoleListQuery {
+    pub end_time: Option<String>,
     pub name: Option<String>,
     pub page: Option<i64>,
     pub page_size: Option<i64>,
+    pub start_time: Option<String>,
     pub status: Option<String>,
 }
 
@@ -352,6 +375,8 @@ async fn role_list(
         &PageQuery { page: query.page, page_size: query.page_size },
         query.name.as_deref().unwrap_or(""),
         status,
+        query.start_time.as_deref().unwrap_or("").trim(),
+        query.end_time.as_deref().unwrap_or("").trim(),
     )
     .await?;
     Ok(axum::Json(R::ok(Page::new(items, total))).into_response())

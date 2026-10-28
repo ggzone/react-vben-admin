@@ -15,6 +15,8 @@ pub struct SystemUser {
     pub home_path: String,
     /// 1 启用 0 禁用
     pub status: i64,
+    /// 性别（官方字典 user_gender：0 未设置 / 1 男 / 2 女）
+    pub gender: i64,
     pub dept_id: i64,
     pub email: String,
     pub phone: String,

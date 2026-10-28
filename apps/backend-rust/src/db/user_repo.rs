@@ -14,7 +14,7 @@ use crate::error::AppError;
 
 /// 用户行的完整列清单（与 `SystemUser` 字段一一对应）
 const USER_COLUMNS: &str = r#"id, username, password, real_name, avatar, home_path, status,
-    dept_id, email, phone, token_version, password_updated_at, last_login_at,
+    gender, dept_id, email, phone, token_version, password_updated_at, last_login_at,
     last_login_ip, created_at"#;
 
 /// 按用户名查询用户

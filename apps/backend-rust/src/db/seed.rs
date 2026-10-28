@@ -293,14 +293,17 @@ pub async fn seed(pool: &SqlitePool) -> Result<(), AppError> {
         (2, "jack", "Jack", "/analytics", user_role_id),
     ];
     for (_index, (id, username, real_name, home_path, role_id)) in users.iter().enumerate() {
+        // 性别（官方字典 user_gender）：演示数据按用户名给个固定值，避免列表全是「未设置」
+        let gender: i64 = if username.contains("e2e") { 2 } else { 1 };
         let user_id: i64 = sqlx::query_scalar(
-            r#"INSERT INTO system_user (username, password, real_name, home_path, status)
-               VALUES (?, ?, ?, ?, 1) RETURNING id"#,
+            r#"INSERT INTO system_user (username, password, real_name, home_path, status, gender)
+               VALUES (?, ?, ?, ?, 1, ?) RETURNING id"#,
         )
         .bind(username)
         .bind(&password_hash)
         .bind(real_name)
         .bind(home_path)
+        .bind(gender)
         .fetch_one(pool)
         .await?;
         sqlx::query("INSERT INTO system_user_role (user_id, role_id) VALUES (?, ?)")

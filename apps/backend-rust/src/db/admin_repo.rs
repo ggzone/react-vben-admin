@@ -23,6 +23,8 @@ use crate::response::PageQuery;
 pub struct UserItem {
     pub create_time: String,
     pub dept_id: String,
+    /// 性别（0 未设置 / 1 男 / 2 女，与官方字典 user_gender 一致）
+    pub gender: i64,
     pub id: String,
     /// 用户名称（real_name），保留原语义供既有前端使用
     pub name: String,
@@ -120,18 +122,32 @@ fn order_by(allowed: &[&str], requested: &str, default: &str) -> String {
 /* ============================ 用户 ============================ */
 
 /// 分页查询用户（支持按部门 / 用户名 / ID / 备注过滤）
+/// 用户列表过滤条件（按前端查询表单的字段组织）
+///
+/// 前端查询项：用户名 / 用户ID / 性别 / 状态 / 备注 / 创建时间范围，
+/// 这里一一对应，避免「前端加了筛选后端收不到」。
+#[derive(Debug, Default, Clone)]
+pub struct UserFilter<'a> {
+    pub dept_id: Option<i64>,
+    /// 创建时间范围（含当天，YYYY-MM-DD）
+    pub end_time: &'a str,
+    pub gender: Option<i64>,
+    pub id: Option<i64>,
+    pub name: &'a str,
+    pub remark: &'a str,
+    pub start_time: &'a str,
+    pub status: Option<i64>,
+}
+
 pub async fn list_users(
     pool: &SqlitePool,
     query: &PageQuery,
-    dept_id: Option<i64>,
-    id: Option<i64>,
-    name: &str,
-    remark: &str,
-    status: Option<i64>,
+    filter: &UserFilter<'_>,
 ) -> Result<(Vec<UserItem>, i64), AppError> {
     let (limit, offset) = query.normalize();
-    let name_like = format!("%{}%", escape_like(name));
-    let remark_like = format!("%{}%", escape_like(remark));
+    let name_like = format!("%{}%", escape_like(filter.name));
+    let remark_like = format!("%{}%", escape_like(filter.remark));
+    let dept_id = filter.dept_id;
 
     // 部门过滤：按「该部门 + 其所有下级部门」过滤
     //
@@ -164,22 +180,32 @@ pub async fn list_users(
             conditions.push(format!("dept_id IN ({placeholders})"));
         }
     }
-    if id.is_some() {
+    if filter.id.is_some() {
         conditions.push("id = ?".to_string());
     }
-    if !name.is_empty() {
+    if !filter.name.is_empty() {
         conditions.push("(username LIKE ? ESCAPE '\\' OR real_name LIKE ? ESCAPE '\\')".to_string());
     }
-    if !remark.is_empty() {
+    if !filter.remark.is_empty() {
         conditions.push("real_name LIKE ? ESCAPE '\\'".to_string());
     }
-    if status.is_some() {
+    if filter.gender.is_some() {
+        conditions.push("gender = ?".to_string());
+    }
+    if filter.status.is_some() {
         conditions.push("status = ?".to_string());
+    }
+    // 创建时间范围：按「日期」比较，避免前端只传 YYYY-MM-DD 时丢掉当天
+    if !filter.start_time.is_empty() {
+        conditions.push("date(created_at) >= date(?)".to_string());
+    }
+    if !filter.end_time.is_empty() {
+        conditions.push("date(created_at) <= date(?)".to_string());
     }
     let where_sql = conditions.join(" AND ");
 
     let list_sql = format!(
-        "SELECT id, username, password, real_name, avatar, home_path, status, dept_id, email, \
+        "SELECT id, username, password, real_name, avatar, home_path, status, gender, dept_id, email, \
          phone, token_version, password_updated_at, last_login_at, last_login_ip, created_at \
          FROM system_user WHERE {where_sql} ORDER BY id ASC LIMIT ? OFFSET ?"
     );
@@ -189,21 +215,30 @@ pub async fn list_users(
     let mut c = sqlx::query_scalar::<_, i64>(&count_sql);
     macro_rules! bind_all {
         ($q:expr) => {{
-            // 部门条件：IN (?,?,…) —— 与上面 dept_ids 的占位符顺序一一对应
+            // 绑定顺序必须与上面 conditions 的 push 顺序完全一致
             for v in dept_ids.iter() {
                 $q = $q.bind(*v);
             }
-            if let Some(v) = id {
+            if let Some(v) = filter.id {
                 $q = $q.bind(v);
             }
-            if !name.is_empty() {
+            if !filter.name.is_empty() {
                 $q = $q.bind(&name_like).bind(&name_like);
             }
-            if !remark.is_empty() {
+            if !filter.remark.is_empty() {
                 $q = $q.bind(&remark_like);
             }
-            if let Some(v) = status {
+            if let Some(v) = filter.gender {
                 $q = $q.bind(v);
+            }
+            if let Some(v) = filter.status {
+                $q = $q.bind(v);
+            }
+            if !filter.start_time.is_empty() {
+                $q = $q.bind(filter.start_time);
+            }
+            if !filter.end_time.is_empty() {
+                $q = $q.bind(filter.end_time);
             }
             $q
         }};
@@ -219,6 +254,7 @@ pub async fn list_users(
         .map(|u| UserItem {
             create_time: u.created_at.clone(),
             dept_id: u.dept_id.to_string(),
+            gender: u.gender,
             id: u.id.to_string(),
             name: u.real_name.clone(),
             remark: u.real_name.clone(),
@@ -237,6 +273,7 @@ pub async fn create_user(
     real_name: &str,
     dept_id: i64,
     status: i64,
+    gender: i64,
 ) -> Result<i64, AppError> {
     let exists: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM system_user WHERE username = ?")
         .bind(username)
@@ -246,14 +283,15 @@ pub async fn create_user(
         return Err(AppError::conflict("用户名已存在"));
     }
     let id: i64 = sqlx::query_scalar(
-        r#"INSERT INTO system_user (username, password, real_name, dept_id, status)
-           VALUES (?, ?, ?, ?, ?) RETURNING id"#,
+        r#"INSERT INTO system_user (username, password, real_name, dept_id, status, gender)
+           VALUES (?, ?, ?, ?, ?, ?) RETURNING id"#,
     )
     .bind(username)
     .bind(password_hash)
     .bind(real_name)
     .bind(dept_id)
     .bind(status)
+    .bind(gender)
     .fetch_one(pool)
     .await?;
     Ok(id)
@@ -266,14 +304,18 @@ pub async fn update_user(
     real_name: &str,
     dept_id: i64,
     status: i64,
+    gender: i64,
 ) -> Result<(), AppError> {
-    sqlx::query("UPDATE system_user SET real_name = ?, dept_id = ?, status = ? WHERE id = ?")
-        .bind(real_name)
-        .bind(dept_id)
-        .bind(status)
-        .bind(id)
-        .execute(pool)
-        .await?;
+    sqlx::query(
+        "UPDATE system_user SET real_name = ?, dept_id = ?, status = ?, gender = ? WHERE id = ?",
+    )
+    .bind(real_name)
+    .bind(dept_id)
+    .bind(status)
+    .bind(gender)
+    .bind(id)
+    .execute(pool)
+    .await?;
     Ok(())
 }
 
@@ -415,6 +457,8 @@ pub async fn list_roles(
     query: &PageQuery,
     name: &str,
     status: Option<i64>,
+    start_time: &str,
+    end_time: &str,
 ) -> Result<(Vec<RoleItem>, i64), AppError> {
     let (limit, offset) = query.normalize();
     let like = format!("%{}%", escape_like(name));
@@ -425,6 +469,13 @@ pub async fn list_roles(
     }
     if status.is_some() {
         conditions.push("status = ?".to_string());
+    }
+    // 创建时间范围（含当天），与用户列表口径一致
+    if !start_time.is_empty() {
+        conditions.push("date(created_at) >= date(?)".to_string());
+    }
+    if !end_time.is_empty() {
+        conditions.push("date(created_at) <= date(?)".to_string());
     }
     let where_sql = conditions.join(" AND ");
 
@@ -442,6 +493,14 @@ pub async fn list_roles(
     if let Some(v) = status {
         q = q.bind(v);
         c = c.bind(v);
+    }
+    if !start_time.is_empty() {
+        q = q.bind(start_time);
+        c = c.bind(start_time);
+    }
+    if !end_time.is_empty() {
+        q = q.bind(end_time);
+        c = c.bind(end_time);
     }
 
     let rows = q.bind(limit).bind(offset).fetch_all(pool).await?;
