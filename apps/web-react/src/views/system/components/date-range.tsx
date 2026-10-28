@@ -169,7 +169,10 @@ export function RangePicker({
   const openPanel = () => {
     const base = parse(value[0]) ?? new Date();
     setLeftMonth(new Date(base.getFullYear(), base.getMonth(), 1));
-    setStart(parse(value[0]));
+    // 每次打开都重新开始：第一次点击总是设为新起点（antd 口径）。
+    // 若预置为旧起点，点更晚的日期会被当成「第二次点选」直接完成区间并关闭，
+    // 表现为无法重新设置起始时间。
+    setStart(null);
     setPreview(null);
     setOpen(true);
   };
@@ -194,8 +197,9 @@ export function RangePicker({
     setOpen(false);
   };
 
-  // 有效区间终点：完成后是已选终点，未完成用 hover 预览
-  const rangeEnd = start ? (preview ?? start) : null;
+  // 面板高亮：本次已点起点用 start/preview；尚未点选时显示已提交的 value 区间
+  const viewStart = start ?? parse(value[0]);
+  const viewEnd = start ? (preview ?? start) : parse(value[1]);
 
   return (
     <div className={cn('relative', className)} ref={wrapRef}>
@@ -263,8 +267,8 @@ export function RangePicker({
                 ),
               )
             }
-            rangeEnd={start ? rangeEnd : null}
-            rangeStart={start}
+            rangeEnd={viewStart ? viewEnd : null}
+            rangeStart={viewStart}
           />
           <div className="w-px bg-[var(--antd-border)]" />
           <Calendar
@@ -280,8 +284,8 @@ export function RangePicker({
                 ),
               )
             }
-            rangeEnd={start ? rangeEnd : null}
-            rangeStart={start}
+            rangeEnd={viewStart ? viewEnd : null}
+            rangeStart={viewStart}
           />
         </div>
       )}
