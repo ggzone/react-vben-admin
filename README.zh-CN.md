@@ -115,6 +115,7 @@ pnpm -F @vben/web-react dev
 - 存储层当前只落地 SQLite；换 Postgres 需补对应 sqlx feature 与迁移脚本。
 - 接口契约以 `apps/web-react/src/api/` 与 `apps/backend-rust/src/routes/` 双侧对齐为准，不含官方 mock 的演示型接口全集。
 - 种子数据均为演示内容，不承载业务数据。
+- `AppConfig.seed_password` 目前未被读取（种子口令实际由 `db/seed.rs` 直接读环境变量），两处默认值不同：`config.rs` 为 `123456`，生效值取 `seed.rs` 的 `123456`。改口令请以 `SEED_PASSWORD` 环境变量显式指定，不要依赖默认值。
 
 ### 8. 提交约定
 
