@@ -1,4 +1,4 @@
-name: CI
+name: CI · React + Rust
 
 # 定制分支专用 CI：只覆盖 React 前端与 Rust 后端。
 # 官方 ci.yml / codeql.yml 等仍保留内置守卫（github.repository == 'vbenjs/vue-vben-admin'），
@@ -18,7 +18,7 @@ on:
       - 'turbo.json'
       - '.node-version'
       - '.github/actions/**'
-      - '.github/workflows/ci-react-rust.yml'
+      - '.github/workflows/**'
   pull_request:
     paths:
       - 'apps/web-react/**'
@@ -31,7 +31,7 @@ on:
       - 'turbo.json'
       - '.node-version'
       - '.github/actions/**'
-      - '.github/workflows/ci-react-rust.yml'
+      - '.github/workflows/**'
   workflow_dispatch:
 
 permissions:
