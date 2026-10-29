@@ -134,7 +134,7 @@ CI 定义在 `.github/workflows/ci-react-rust.yml`，只覆盖定制部分：
 
 两点需要说明：
 
-- 官方 `ci.yml`、`codeql.yml` 等每个 job 都带 `if: github.repository == 'vbenjs/vue-vben-admin'` 守卫，在本仓库会整体跳过，因此定制 CI 独立成文件，不必改动官方定义（它们仍会以 `skipped` 出现在 Actions 列表里，属正常现象）。
+- 官方 12 个 workflow（`ci.yml`、`codeql.yml`、`deploy.yml`、`draft.yml`、`stale.yml` 等）的每个 job 都带 `if: github.repository == 'vbenjs/vue-vben-admin'` 守卫，在本仓库永久空转，只会给每次 push 贡献数条 1 秒的 `skipped` 记录。已全部删除，`rerun.yml`（手动触发的重跑工具）保留。今后本仓库的 Actions 列表里只会出现本文件对应的运行。
 - `fmt` 为**提示性**检查（`continue-on-error`），`clippy` 暂不加 `-D warnings`：现有代码有 15+ 处 rustfmt 风格差异与 21 处 clippy 告警（`seed_password`、`refresh_ttl_secs` 等未使用项，`audit()` 参数过多等）。清理后可依次去掉这两个放宽项，升级为硬门禁。
 
 本地等价复现：

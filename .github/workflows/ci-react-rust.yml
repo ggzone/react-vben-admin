@@ -1,8 +1,10 @@
 name: CI · React + Rust
 
-# 定制分支专用 CI：只覆盖 React 前端与 Rust 后端。
-# 官方 ci.yml / codeql.yml 等仍保留内置守卫（github.repository == 'vbenjs/vue-vben-admin'），
-# 在本仓库不会触发，因此这里独立成文件，互不干扰。
+# 本仓库唯一的实际 CI：只覆盖 React 前端与 Rust 后端。
+# 官方 12 个 workflow（ci.yml / codeql.yml / deploy.yml / draft.yml 等）均带
+# if: github.repository == 'vbenjs/vue-vben-admin' 守卫，在本仓库只会产生
+# 1 秒的 skipped 记录，已于 2026-10-29 全部移除。
+# rerun.yml 为手动触发工具，保留。
 on:
   push:
     branches:
