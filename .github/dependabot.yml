@@ -1,12 +1,46 @@
+# 本仓库是 React + Rust 定制分支，官方 Vue 应用（web-antd / web-ele / web-naive /
+# web-tdesign）仅作对照保留。全部版本集中在 pnpm-workspace.yaml 的 catalog，
+# 一次 npm 更新会扫全仓，官方模板的 daily 策略因此会产生大量无用 PR。
+#
+# 策略：
+#   - npm 改为每周一次，最多同时 3 个未关闭 PR
+#   - 忽略 Vue 生态依赖（本分支不维护其升级；Dependabot security updates
+#     独立运行，不受此 ignore 影响）
+#   - github-actions 保持每周
 version: 2
 updates:
   - package-ecosystem: npm
     directory: '/'
     schedule:
-      interval: daily
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Asia/Shanghai
+    open-pulls-limit: 3
     groups:
       non-breaking-changes:
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: vue
+      - dependency-name: vue-*
+      - dependency-name: '@vue/*'
+      - dependency-name: '@vueuse/*'
+      - dependency-name: pinia
+      - dependency-name: pinia-plugin-persistedstate
+      - dependency-name: unplugin-vue*
+      - dependency-name: '@vitejs/plugin-vue*'
+      - dependency-name: ant-design-vue
+      - dependency-name: antdv-next
+      - dependency-name: naive-ui
+      - dependency-name: element-plus
+      - dependency-name: unplugin-element-plus
+      - dependency-name: tdesign-vue-next
+      - dependency-name: lucide-vue-next
+      - dependency-name: vxe-*
+      - dependency-name: '@intlify/*'
+      - dependency-name: '@tanstack/vue-*'
+      - dependency-name: '@tiptap/vue-3'
+      - dependency-name: vitepress*
 
   - package-ecosystem: github-actions
     directory: '/'

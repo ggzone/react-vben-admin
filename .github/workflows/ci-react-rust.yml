@@ -59,7 +59,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # 复用仓库自带 composite action（含 pnpm 安装、Node 版本读取、依赖缓存）
       - name: Setup Node & pnpm
@@ -80,7 +80,7 @@ jobs:
         working-directory: apps/backend-rust
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
