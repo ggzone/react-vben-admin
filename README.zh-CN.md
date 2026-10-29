@@ -121,6 +121,35 @@ pnpm -F @vben/web-react dev
 
 以下属本机产物与临时文件，**不入库**（`.gitignore` 已覆盖）：`apps/backend-rust/.env`、`apps/backend-rust/data/`、`apps/backend-rust/target/`、`apps/web-react/.env.*.local`、`*.log`、构建临时脚本（`*.tmp-build.bat`）、本地探针脚本与截图（`shot/`、`.tmp/`）。
 
+### 9. 持续集成
+
+CI 定义在 `.github/workflows/ci-react-rust.yml`，只覆盖定制部分：
+
+| Job | 内容 |
+|---|---|
+| `Web · typecheck & build` | `pnpm -F @vben/web-react run typecheck` + `run build` |
+| `Rust · fmt / clippy / test` | `cargo fmt --check`（提示性）、`cargo clippy`、`cargo test`（13 个单测） |
+
+触发条件为 `push` 到 `main` 与 `pull_request`，并按 `paths` 过滤（前端、后端、`packages/`、`internal/`、锁文件、workflow 自身）。同一分支的旧运行会被新提交自动取消。
+
+两点需要说明：
+
+- 官方 `ci.yml`、`codeql.yml` 等每个 job 都带 `if: github.repository == 'vbenjs/vue-vben-admin'` 守卫，在本仓库会整体跳过，因此定制 CI 独立成文件，不必改动官方定义（它们仍会以 `skipped` 出现在 Actions 列表里，属正常现象）。
+- `fmt` 为**提示性**检查（`continue-on-error`），`clippy` 暂不加 `-D warnings`：现有代码有 15+ 处 rustfmt 风格差异与 21 处 clippy 告警（`seed_password`、`refresh_ttl_secs` 等未使用项，`audit()` 参数过多等）。清理后可依次去掉这两个放宽项，升级为硬门禁。
+
+本地等价复现：
+
+```bash
+pnpm -F @vben/web-react run typecheck && pnpm -F @vben/web-react run build
+
+cd apps/backend-rust
+cargo fmt --all -- --check
+cargo clippy --all-targets
+cargo test --all-targets
+```
+
+仓库为 public，标准 GitHub 托管 runner 分钟数不限量，本 CI 不产生费用。
+
 ## 升级提示
 
 该版本为最新版本 `5.0`，与其他版本不兼容，如果你是新项目，建议使用最新版本。如果你想查看旧版本，请使用 [v2 分支](https://github.com/vbenjs/vue-vben-admin/tree/v2)
