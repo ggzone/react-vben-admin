@@ -358,8 +358,8 @@ catalogs:
       specifier: ^8.5.15
       version: 8.5.15
     postcss-html:
-      specifier: ^1.8.1
-      version: 1.8.1
+      specifier: ^2.0.0
+      version: 2.0.0
     postcss-scss:
       specifier: ^4.0.9
       version: 4.0.9
@@ -1324,7 +1324,7 @@ importers:
         version: 8.5.15
       postcss-html:
         specifier: 'catalog:'
-        version: 1.8.1
+        version: 2.0.0(postcss@8.5.15)
       postcss-scss:
         specifier: 'catalog:'
         version: 4.0.9(postcss@8.5.15)
@@ -1339,7 +1339,7 @@ importers:
         version: 17.0.1(postcss@8.5.15)(stylelint@17.11.1(typescript@6.0.3))
       stylelint-config-recommended-vue:
         specifier: 'catalog:'
-        version: 1.6.1(postcss-html@1.8.1)(stylelint@17.11.1(typescript@6.0.3))
+        version: 1.6.1(postcss-html@2.0.0(postcss@8.5.15))(stylelint@17.11.1(typescript@6.0.3))
       stylelint-config-standard:
         specifier: 'catalog:'
         version: 40.0.0(stylelint@17.11.1(typescript@6.0.3))
@@ -7562,6 +7562,7 @@ packages:
 
   crypto-js@4.2.0:
     resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
+    deprecated: Active development of CryptoJS has been discontinued. This library is no longer maintained.
 
   crypto-random-string@2.0.0:
     resolution: {integrity: sha512-v1plID3y9r/lPhviJ1wrXpLeyUIGAZ2SHNYTEapm7/8A9nLPoyvVp3RK/EPFqn5kEznyWgYZNsRtYYIWbuG8KA==}
@@ -8644,8 +8645,8 @@ packages:
   htmlparser2@10.1.0:
     resolution: {integrity: sha512-VTZkM9GWRAtEpveh7MSF6SjjrpNVNNVJfFup7xTY3UpFtm67foy9HDVXneLtFVt4pMz5kZtgNcvCniNFb1hlEQ==}
 
-  htmlparser2@8.0.2:
-    resolution: {integrity: sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==}
+  htmlparser2@9.1.0:
+    resolution: {integrity: sha512-5zfg6mHUoaer/97TxnGpxmbR7zJtPwIYFMZ/H5ucTlPZhKvtum05yiPK3Mgai3a0DyVxv7qYqoweaEd2nrYQzQ==}
 
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
@@ -9959,9 +9960,11 @@ packages:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
 
-  postcss-html@1.8.1:
-    resolution: {integrity: sha512-OLF6P7qctfAWayOhLpcVnTGqVeJzu2W3WpIYelfz2+JV5oGxfkcEvweN9U4XpeqE0P98dcD9ssusGwlF0TK0uQ==}
-    engines: {node: ^12 || >=14}
+  postcss-html@2.0.0:
+    resolution: {integrity: sha512-f2Rvw5FCollEfVj3wfN7JdQb7n2rNIthW+epw2EByio7M6P7RH0BTj8a/ODHrUXd0cmO7ychb6YniymV93182Q==}
+    engines: {node: ^22.12 || >=24}
+    peerDependencies:
+      postcss: ^8.5.0
 
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
@@ -9986,12 +9989,6 @@ packages:
 
   postcss-resolve-nested-selector@0.1.6:
     resolution: {integrity: sha512-0sglIs9Wmkzbr8lQwEyIzlDOOC9bGmfVKcJTaxv3vMmd3uo4o4DerC3En0bnmgceeql9BfC8hRkp7cg0fjdVqw==}
-
-  postcss-safe-parser@6.0.0:
-    resolution: {integrity: sha512-FARHN8pwH+WiS2OPCxJI8FuRJpTVnn6ZNFiqAM2aeW2LwTHWWmWgIyKC6cUo0L8aeKiF/14MNvnpls6R2PBeMQ==}
-    engines: {node: '>=12.0'}
-    peerDependencies:
-      postcss: ^8.3.3
 
   postcss-safe-parser@7.0.1:
     resolution: {integrity: sha512-0AioNCJZ2DPYz5ABT6bddIqlhgwhpHZ/l65YAYo0BCIn0xiDpsnTHz0gnoTGk0OXZW0JRs+cDwL8u/teRdz+8A==}
@@ -18658,7 +18655,7 @@ snapshots:
       domutils: 3.2.2
       entities: 7.0.1
 
-  htmlparser2@8.0.2:
+  htmlparser2@9.1.0:
     dependencies:
       domelementtype: 2.3.0
       domhandler: 5.0.3
@@ -20059,12 +20056,12 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-html@1.8.1:
+  postcss-html@2.0.0(postcss@8.5.15):
     dependencies:
-      htmlparser2: 8.0.2
+      htmlparser2: 9.1.0
       js-tokens: 9.0.1
       postcss: 8.5.15
-      postcss-safe-parser: 6.0.0(postcss@8.5.15)
+      postcss-safe-parser: 7.0.1(postcss@8.5.15)
 
   postcss-load-config@6.0.1(jiti@2.7.0)(postcss@8.5.15)(yaml@2.9.0):
     dependencies:
@@ -20077,10 +20074,6 @@ snapshots:
   postcss-media-query-parser@0.2.3: {}
 
   postcss-resolve-nested-selector@0.1.6: {}
-
-  postcss-safe-parser@6.0.0(postcss@8.5.15):
-    dependencies:
-      postcss: 8.5.15
 
   postcss-safe-parser@7.0.1(postcss@8.5.15):
     dependencies:
@@ -21039,9 +21032,9 @@ snapshots:
       hey-listen: 1.0.8
       tslib: 2.4.0
 
-  stylelint-config-html@1.1.0(postcss-html@1.8.1)(stylelint@17.11.1(typescript@6.0.3)):
+  stylelint-config-html@1.1.0(postcss-html@2.0.0(postcss@8.5.15))(stylelint@17.11.1(typescript@6.0.3)):
     dependencies:
-      postcss-html: 1.8.1
+      postcss-html: 2.0.0(postcss@8.5.15)
       stylelint: 17.11.1(typescript@6.0.3)
 
   stylelint-config-recess-order@7.7.0(stylelint-order@8.1.1(stylelint@17.11.1(typescript@6.0.3)))(stylelint@17.11.1(typescript@6.0.3)):
@@ -21058,12 +21051,12 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.15
 
-  stylelint-config-recommended-vue@1.6.1(postcss-html@1.8.1)(stylelint@17.11.1(typescript@6.0.3)):
+  stylelint-config-recommended-vue@1.6.1(postcss-html@2.0.0(postcss@8.5.15))(stylelint@17.11.1(typescript@6.0.3)):
     dependencies:
-      postcss-html: 1.8.1
+      postcss-html: 2.0.0(postcss@8.5.15)
       semver: 7.8.0
       stylelint: 17.11.1(typescript@6.0.3)
-      stylelint-config-html: 1.1.0(postcss-html@1.8.1)(stylelint@17.11.1(typescript@6.0.3))
+      stylelint-config-html: 1.1.0(postcss-html@2.0.0(postcss@8.5.15))(stylelint@17.11.1(typescript@6.0.3))
       stylelint-config-recommended: 18.0.0(stylelint@17.11.1(typescript@6.0.3))
 
   stylelint-config-recommended@18.0.0(stylelint@17.11.1(typescript@6.0.3)):
