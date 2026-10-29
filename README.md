@@ -18,6 +18,39 @@
 
 Vue Vben Admin is a free and open source middle and back-end template. Using the latest `vue3`, `vite`, `TypeScript` and other mainstream technology development, the out-of-the-box middle and back-end front-end solutions can also be used for learning reference.
 
+## Customized Branch: React Frontend + Rust Backend
+
+> This fork keeps the official `v5.7.0` baseline and, on the `feat/web-react` branch, replaces the frontend with **React 18 + TypeScript** and the backend with **Rust (axum + sqlx + SQLite)**.
+
+| Item | Location | Note |
+| --- | --- | --- |
+| Branch | `feat/web-react` | All custom work lives here |
+| Frontend | `apps/web-react` | React 18 + TS + Tailwind v4, dev port `5667` |
+| Backend | `apps/backend-rust` | axum 0.8 + sqlx + SQLite, default port `5330` |
+| Baseline | `apps/web-antd` and other Vue apps | Untouched, used as a visual/behavior reference |
+
+Start both sides separately; the Vite dev server proxies `/api` to the Rust backend:
+
+```bash
+# 1) Backend: creates the SQLite DB, runs migrations and seeds on first boot
+cargo run --manifest-path apps/backend-rust/Cargo.toml
+
+# 2) Frontend
+pnpm -F @vben/web-react dev
+```
+
+The frontend picks its backend through the `VITE_API_TARGET` environment variable:
+
+| Mode | Trigger | `/api` target |
+| --- | --- | --- |
+| rust (default) | unset | `http://127.0.0.1:5330` |
+| custom | `VITE_API_TARGET=http://host:port` | the given address |
+| built-in mock | `VITE_API_TARGET=off` | none, `vite-mock` takes over |
+
+Switching backends also required non-trivial adjustments — dynamic proxy generation, per-mode Vite `cacheDir`, Bearer-token auth with automatic `/api/auth/refresh` retry, loop guards around refresh failures, Argon2id password hashing, login lockout, explicit CORS allow-lists and seed data that never overwrites an existing database.
+
+Full details (API routes, table list, configuration matrix, known limits) are documented in Chinese in [README.zh-CN.md](./README.zh-CN.md#本项目定制react-前端--rust-后端).
+
 ## Upgrade Notice
 
 This is the latest version, 5.0, and it is not compatible with previous versions. If you are starting a new project, it is recommended to use the latest version. If you wish to view the old version, please use the [v2 branch](https://github.com/vbenjs/vue-vben-admin/tree/v2).

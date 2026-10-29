@@ -68,3 +68,10 @@ shot/
 apps/backend-rust/target/
 apps/backend-rust/data/
 apps/backend-rust/.env
+
+# 本地构建 / 调试临时文件（不入库）
+*.tmp-build.bat
+tmp-build.bat
+*.bak
+*.orig
+*.rej
