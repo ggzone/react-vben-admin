@@ -51,6 +51,8 @@ Switching backends also required non-trivial adjustments — dynamic proxy gener
 
 CI lives in `.github/workflows/ci-react-rust.yml` and covers only the customized parts: `typecheck` + build for `apps/web-react`, and `fmt` (advisory) + `clippy` + `cargo test` for `apps/backend-rust`. It runs on pushes to `main` and on pull requests, filtered by `paths`, with stale runs auto-cancelled. The 12 upstream workflows were removed: every job they define is gated on `github.repository == 'vbenjs/vue-vben-admin'`, so they could only ever add one-second `skipped` records to the run list. `rerun.yml` (manual re-run helper) is kept.
 
+Dependabot is configured for this fork rather than left as the upstream template: npm updates run weekly with `open-pulls-limit: 3`, and 20 Vue-ecosystem dependencies are ignored — all versions live in the `pnpm-workspace.yaml` `catalog`, so a single npm run would otherwise sweep the whole monorepo, including the Vue apps that are kept for reference only. `ignore` affects version updates only; Dependabot security updates are unaffected.
+
 Full details (API routes, table list, configuration matrix, CI notes, known limits) are documented in Chinese in [README.zh-CN.md](./README.zh-CN.md#本项目定制react-前端--rust-后端).
 
 ## Upgrade Notice

@@ -150,6 +150,17 @@ cargo test --all-targets
 
 仓库为 public，标准 GitHub 托管 runner 分钟数不限量，本 CI 不产生费用。
 
+### 10. 依赖更新（Dependabot）
+
+`.github/dependabot.yml` 已按定制分支调整，不只是官方模板：
+
+| 项 | 策略 | 原因 |
+|---|---|---|
+| npm 频率 | 每周一 09:00（Asia/Shanghai） | 全部版本集中在 `pnpm-workspace.yaml` 的 `catalog`，一次更新即扫全仓，daily 会持续产 PR |
+| 并发上限 | `open-pulls-limit: 3` | 避免一次涌出十几个待审 PR |
+| 忽略项 | 20 条 Vue 生态依赖（`vue*`、`@vue/*`、`@vueuse/*`、`pinia`、`element-plus`、`ant-design-vue`、`naive-ui`、`tdesign-vue-next`、`unplugin-vue*`、`vxe-*`、`vitepress*` 等） | 官方 Vue 应用仅作对照保留，本分支不维护其升级；`ignore` 只作用于版本更新，Dependabot security updates 不受影响 |
+| github-actions | 每周，不忽略 | workflow 引用的 action 需要跟进（当前 `actions/checkout@v7`、`actions/setup-node@v6`、`pnpm/action-setup@v6`） |
+
 ## 升级提示
 
 该版本为最新版本 `5.0`，与其他版本不兼容，如果你是新项目，建议使用最新版本。如果你想查看旧版本，请使用 [v2 分支](https://github.com/vbenjs/vue-vben-admin/tree/v2)
