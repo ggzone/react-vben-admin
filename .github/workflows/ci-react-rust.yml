@@ -1,0 +1,107 @@
+name: CI
+
+# 定制分支专用 CI：只覆盖 React 前端与 Rust 后端。
+# 官方 ci.yml / codeql.yml 等仍保留内置守卫（github.repository == 'vbenjs/vue-vben-admin'），
+# 在本仓库不会触发，因此这里独立成文件，互不干扰。
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/web-react/**'
+      - 'apps/backend-rust/**'
+      - 'packages/**'
+      - 'internal/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - '.node-version'
+      - '.github/actions/**'
+      - '.github/workflows/ci-react-rust.yml'
+  pull_request:
+    paths:
+      - 'apps/web-react/**'
+      - 'apps/backend-rust/**'
+      - 'packages/**'
+      - 'internal/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - '.node-version'
+      - '.github/actions/**'
+      - '.github/workflows/ci-react-rust.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同一分支的旧运行直接取消，避免连续 push 堆积
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  TZ: Asia/Shanghai
+  CARGO_TERM_COLOR: always
+  # 增量编译在 CI 上收益为负（缓存命中率低、产物更大）
+  CARGO_INCREMENTAL: '0'
+  RUST_BACKTRACE: '1'
+
+jobs:
+  web:
+    name: Web · typecheck & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # 复用仓库自带 composite action（含 pnpm 安装、Node 版本读取、依赖缓存）
+      - name: Setup Node & pnpm
+        uses: ./.github/actions/setup-node
+
+      - name: Typecheck
+        run: pnpm -F @vben/web-react run typecheck
+
+      - name: Build
+        run: pnpm -F @vben/web-react run build
+
+  rust:
+    name: Rust · fmt / clippy / test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/backend-rust
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@v2
+        with:
+          # 工作目录不是仓库根，必须显式声明，否则缓存路径算错
+          workspaces: apps/backend-rust -> target
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # 提示性检查：格式不合规只产生告警，不阻塞合并。
+      # 待格式统一后可去掉 continue-on-error，升级为硬门禁。
+      - name: Format check (advisory)
+        continue-on-error: true
+        run: cargo fmt --all -- --check
+
+      # 暂不加 -D warnings：代码里仍有既有告警，强门禁会让首次运行直接红。
+      # 清理完毕后可改为 cargo clippy --all-targets -- -D warnings
+      - name: Clippy
+        run: cargo clippy --all-targets
+
+      - name: Test
+        run: cargo test --all-targets
